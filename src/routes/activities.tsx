@@ -18,10 +18,14 @@ export const Route = createFileRoute("/activities")({
         content:
           "International conference roles, certifications, volunteering, honors, professional memberships and academic references for Md. Mehedi Hasan.",
       },
-      { property: "og:title", content: "Activities & Awards — Md. Mehedi Hasan" },
+      {
+        property: "og:title",
+        content: "Activities & Awards — Md. Mehedi Hasan",
+      },
       {
         property: "og:description",
-        content: "Conference service, certifications, honors, memberships and references.",
+        content:
+          "Conference service, certifications, honors, memberships and references.",
       },
     ],
   }),

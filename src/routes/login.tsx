@@ -1,14 +1,18 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { Section } from "@/components/site/section";
-import { adminLogin } from "@/lib/content.functions";
+import { adminLogin, adminSession } from "@/lib/content.functions";
 
 export const Route = createFileRoute("/login")({
   head: () => ({
     meta: [
       { title: "Admin Sign In — Md. Mehedi Hasan" },
-      { name: "description", content: "Private administration sign-in for the portfolio content manager." },
+      {
+        name: "description",
+        content:
+          "Private administration sign-in for the portfolio content manager.",
+      },
       { name: "robots", content: "noindex" },
     ],
   }),
@@ -21,14 +25,26 @@ function LoginPage() {
   const [status, setStatus] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
+  useEffect(() => {
+    void adminSession().then((session) => {
+      if (session.authenticated) window.location.assign("/admin");
+    });
+  }, []);
+
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true);
     setStatus(null);
     try {
-      await adminLogin({ data: { email, password } });
-      window.location.href = "/admin";
-    } catch {
+      const result = await adminLogin({
+        data: { email, password, remember: true },
+      });
+      if (!result.ok) {
+        setStatus(result.message);
+        return;
+      }
+      window.location.assign("/admin");
+    } catch (error) {
       setStatus("Sign in failed. Check your credentials and try again.");
     } finally {
       setBusy(false);
@@ -36,8 +52,15 @@ function LoginPage() {
   }
 
   return (
-    <Section eyebrow="Administration" title="Sign in" description="Restricted area for content management.">
-      <form onSubmit={onSubmit} className="card-surface grid max-w-md gap-4 p-6">
+    <Section
+      eyebrow="Administration"
+      title="Sign in"
+      description="Restricted area for content management."
+    >
+      <form
+        onSubmit={onSubmit}
+        className="card-surface grid max-w-md gap-4 p-6"
+      >
         <div className="grid gap-1.5">
           <label htmlFor="email" className="text-sm font-medium">
             Email

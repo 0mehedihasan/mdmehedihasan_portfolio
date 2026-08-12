@@ -9,7 +9,8 @@ export function SiteFooter() {
         <div>
           <p className="font-serif text-lg">{person.name}</p>
           <p className="mt-2 max-w-md text-sm text-muted-foreground">
-            Research Assistant at AMIRL. Machine learning, explainable AI, and healthcare AI research.
+            Research Assistant at AMIRL. Machine learning, explainable AI, and
+            healthcare AI research.
           </p>
           <p className="mt-3 text-sm text-muted-foreground">
             <a className="link-underline" href={`mailto:${person.email}`}>
@@ -31,7 +32,10 @@ export function SiteFooter() {
               </a>
             ))}
           </div>
-          <Link to="/login" className="text-muted-foreground hover:text-foreground">
+          <Link
+            to="/login"
+            className="text-muted-foreground hover:text-foreground"
+          >
             Admin
           </Link>
           <p className="text-xs text-muted-foreground">

@@ -12,7 +12,10 @@ export function Markdown({ children }: { children: string }) {
     <div className="prose-doc">
       <ReactMarkdown
         remarkPlugins={[remarkGfm, remarkMath]}
-        rehypePlugins={[rehypeKatex, [rehypeHighlight, { detect: true, ignoreMissing: true }]]}
+        rehypePlugins={[
+          rehypeKatex,
+          [rehypeHighlight, { detect: true, ignoreMissing: true }],
+        ]}
       >
         {children}
       </ReactMarkdown>

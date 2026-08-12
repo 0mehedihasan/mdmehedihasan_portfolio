@@ -19,14 +19,16 @@ export function ThemeToggle() {
     apply(stored);
     const mq = window.matchMedia("(prefers-color-scheme: dark)");
     const onChange = () => {
-      if ((localStorage.getItem(KEY) as Mode | null) === "system") apply("system");
+      if ((localStorage.getItem(KEY) as Mode | null) === "system")
+        apply("system");
     };
     mq.addEventListener("change", onChange);
     return () => mq.removeEventListener("change", onChange);
   }, []);
 
   const cycle = () => {
-    const next: Mode = mode === "light" ? "dark" : mode === "dark" ? "system" : "light";
+    const next: Mode =
+      mode === "light" ? "dark" : mode === "dark" ? "system" : "light";
     setMode(next);
     localStorage.setItem(KEY, next);
     apply(next);

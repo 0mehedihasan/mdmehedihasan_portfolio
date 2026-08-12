@@ -1,4 +1,10 @@
 export type ContentTypeId =
+  | "profile"
+  | "about"
+  | "research-interests"
+  | "experience"
+  | "education"
+  | "skills"
   | "research"
   | "project"
   | "publication"
@@ -8,30 +14,173 @@ export type ContentTypeId =
   | "conference"
   | "certification"
   | "award"
-  | "activity";
+  | "activity"
+  | "membership"
+  | "cv"
+  | "settings";
 
 export type ContentType = {
   id: ContentTypeId;
   label: string;
-  dir: string;
+  path: string;
+  kind: "file" | "collection";
   description: string;
 };
 
 export const CONTENT_TYPES: ContentType[] = [
-  { id: "research", label: "Research", dir: "content/research", description: "Research notes and write-ups" },
-  { id: "project", label: "Research Project", dir: "content/projects", description: "Project deep dives" },
-  { id: "publication", label: "Publication", dir: "content/publications", description: "Papers and manuscripts" },
-  { id: "article", label: "Article", dir: "content/articles", description: "Long-form articles" },
-  { id: "tutorial", label: "Tutorial", dir: "content/tutorials", description: "Technical tutorials" },
-  { id: "dataset", label: "Dataset", dir: "content/datasets", description: "Dataset documentation" },
-  { id: "conference", label: "Conference", dir: "content/conferences", description: "Conference activities" },
-  { id: "certification", label: "Certification", dir: "content/certifications", description: "Training records" },
-  { id: "award", label: "Award", dir: "content/awards", description: "Honors and awards" },
-  { id: "activity", label: "Professional Activity", dir: "content/extracurricular", description: "Volunteering and leadership" },
+  {
+    id: "profile",
+    label: "Profile",
+    path: "content/profile.md",
+    kind: "file",
+    description: "Hero and profile details",
+  },
+  {
+    id: "about",
+    label: "About",
+    path: "content/about.md",
+    kind: "file",
+    description: "Professional summary",
+  },
+  {
+    id: "research-interests",
+    label: "Research Interests",
+    path: "content/research-interests.md",
+    kind: "file",
+    description: "Research focus and themes",
+  },
+  {
+    id: "experience",
+    label: "Experience",
+    path: "content/experience.md",
+    kind: "file",
+    description: "Work history",
+  },
+  {
+    id: "education",
+    label: "Education",
+    path: "content/education.md",
+    kind: "file",
+    description: "Academic history",
+  },
+  {
+    id: "skills",
+    label: "Technical Skills",
+    path: "content/skills.md",
+    kind: "file",
+    description: "Skill inventory",
+  },
+  {
+    id: "membership",
+    label: "Memberships",
+    path: "content/memberships.md",
+    kind: "file",
+    description: "Professional memberships",
+  },
+  {
+    id: "cv",
+    label: "CV",
+    path: "content/cv.md",
+    kind: "file",
+    description: "Academic CV metadata",
+  },
+  {
+    id: "settings",
+    label: "Settings",
+    path: "content/settings.md",
+    kind: "file",
+    description: "Site and profile settings",
+  },
+  {
+    id: "research",
+    label: "Research",
+    path: "content/research",
+    kind: "collection",
+    description: "Research notes and write-ups",
+  },
+  {
+    id: "project",
+    label: "Research Project",
+    path: "content/projects",
+    kind: "collection",
+    description: "Project deep dives",
+  },
+  {
+    id: "publication",
+    label: "Publication",
+    path: "content/publications",
+    kind: "collection",
+    description: "Papers and manuscripts",
+  },
+  {
+    id: "article",
+    label: "Article",
+    path: "content/articles",
+    kind: "collection",
+    description: "Long-form articles",
+  },
+  {
+    id: "tutorial",
+    label: "Tutorial",
+    path: "content/tutorials",
+    kind: "collection",
+    description: "Technical tutorials",
+  },
+  {
+    id: "dataset",
+    label: "Dataset",
+    path: "content/datasets",
+    kind: "collection",
+    description: "Dataset documentation",
+  },
+  {
+    id: "conference",
+    label: "Conference",
+    path: "content/conferences",
+    kind: "collection",
+    description: "Conference activities",
+  },
+  {
+    id: "certification",
+    label: "Certification",
+    path: "content/certifications",
+    kind: "collection",
+    description: "Training records",
+  },
+  {
+    id: "award",
+    label: "Award",
+    path: "content/awards",
+    kind: "collection",
+    description: "Honors and awards",
+  },
+  {
+    id: "activity",
+    label: "Professional Activity",
+    path: "content/extracurricular",
+    kind: "collection",
+    description: "Volunteering and leadership",
+  },
 ];
 
 export function typeById(id: string): ContentType | undefined {
   return CONTENT_TYPES.find((t) => t.id === id);
+}
+
+export function pathForType(type: ContentType, slug: string): string {
+  if (type.kind === "file") return type.path;
+  return `${type.path}/${slug}.md`;
+}
+
+export function inferTypeIdFromPath(path: string): ContentTypeId | undefined {
+  const exact = CONTENT_TYPES.find(
+    (type) => type.kind === "file" && type.path === path,
+  );
+  if (exact) return exact.id;
+  const collection = CONTENT_TYPES.find(
+    (type) => type.kind === "collection" && path.startsWith(`${type.path}/`),
+  );
+  return collection?.id;
 }
 
 export function slugify(input: string): string {
@@ -87,13 +236,20 @@ export function serializeDoc(fm: Frontmatter, body: string): string {
 
 function unquote(value: string): string {
   const v = value.trim();
-  if ((v.startsWith('"') && v.endsWith('"')) || (v.startsWith("'") && v.endsWith("'"))) {
+  if (
+    (v.startsWith('"') && v.endsWith('"')) ||
+    (v.startsWith("'") && v.endsWith("'"))
+  ) {
     return v.slice(1, -1).replace(/\\"/g, '"').replace(/\\\\/g, "\\");
   }
   return v;
 }
 
-export function parseDoc(raw: string, path = ""): ContentDoc {
+export function parseDoc(
+  raw: string,
+  path = "",
+  typeId?: ContentTypeId,
+): ContentDoc {
   const match = /^---\r?\n([\s\S]*?)\r?\n---\r?\n?([\s\S]*)$/.exec(raw);
   const body = (match?.[2] ?? raw) || "";
   const fm: Record<string, string> = {};
@@ -111,10 +267,12 @@ export function parseDoc(raw: string, path = ""): ContentDoc {
     .map((t) => unquote(t))
     .filter(Boolean);
   const fallbackSlug = path.split("/").pop()?.replace(/\.md$/, "") ?? "";
+  const inferredType = typeId ?? inferTypeIdFromPath(path) ?? "article";
   return {
     title: unquote(fm["title"] ?? fallbackSlug),
     slug: unquote(fm["slug"] ?? fallbackSlug),
-    type: (unquote(fm["type"] ?? "article") as ContentTypeId) || "article",
+    type:
+      (unquote(fm["type"] ?? inferredType) as ContentTypeId) || inferredType,
     date: unquote(fm["date"] ?? ""),
     tags,
     summary: unquote(fm["summary"] ?? "") || null,

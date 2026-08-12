@@ -22,13 +22,21 @@ export function Section({
   return (
     <section
       id={id}
-      className={cn("scroll-mt-24 border-t border-border py-16 sm:py-20", tone === "surface" && "bg-surface", className)}
+      className={cn(
+        "scroll-mt-24 border-t border-border py-16 sm:py-20",
+        tone === "surface" && "bg-surface",
+        className,
+      )}
     >
       <div className="container-page">
         <header className="max-w-3xl">
           {eyebrow ? <p className="eyebrow">{eyebrow}</p> : null}
           <h2 className="mt-2 text-3xl sm:text-4xl">{title}</h2>
-          {description ? <p className="mt-3 text-base text-muted-foreground">{description}</p> : null}
+          {description ? (
+            <p className="mt-3 text-base text-muted-foreground">
+              {description}
+            </p>
+          ) : null}
         </header>
         <div className="mt-10">{children}</div>
       </div>
@@ -36,7 +44,13 @@ export function Section({
   );
 }
 
-export function Tag({ children, tone = "default" }: { children: ReactNode; tone?: "default" | "accent" }) {
+export function Tag({
+  children,
+  tone = "default",
+}: {
+  children: ReactNode;
+  tone?: "default" | "accent";
+}) {
   return (
     <span
       className={cn(

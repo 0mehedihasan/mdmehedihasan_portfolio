@@ -5,7 +5,11 @@ const MAX_AGE_REMEMBER = 60 * 60 * 24 * 30;
 const MAX_AGE_SESSION = 60 * 60 * 8;
 
 function secret(): string {
-  return process.env["SESSION_SECRET"] ?? process.env["ADMIN_PASSWORD"] ?? "mmh-portfolio-dev-secret";
+  return (
+    process.env["SESSION_SECRET"] ??
+    process.env["ADMIN_PASSWORD"] ??
+    "mmh-portfolio-dev-secret"
+  );
 }
 
 function b64url(bytes: Uint8Array): string {
@@ -22,7 +26,11 @@ async function sign(payload: string): Promise<string> {
     false,
     ["sign"],
   );
-  const sig = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(payload));
+  const sig = await crypto.subtle.sign(
+    "HMAC",
+    key,
+    new TextEncoder().encode(payload),
+  );
   return b64url(new Uint8Array(sig));
 }
 
@@ -41,11 +49,15 @@ export function isAuthConfigured(): boolean {
   return Boolean(process.env["ADMIN_PASSWORD"]);
 }
 
-export async function verifyCredentials(email: string, password: string): Promise<boolean> {
+export async function verifyCredentials(
+  email: string,
+  password: string,
+): Promise<boolean> {
   const expectedPassword = process.env["ADMIN_PASSWORD"];
   if (!expectedPassword) return false;
   return (
-    email.trim().toLowerCase() === adminEmail().trim().toLowerCase() && safeEqual(password, expectedPassword)
+    email.trim().toLowerCase() === adminEmail().trim().toLowerCase() &&
+    safeEqual(password, expectedPassword)
   );
 }
 
@@ -61,7 +73,9 @@ export function clearSessionCookie(): string {
   return `${COOKIE}=; Path=/; HttpOnly; SameSite=Lax; Secure; Max-Age=0`;
 }
 
-export async function readSession(cookieHeader: string | null | undefined): Promise<{ email: string } | null> {
+export async function readSession(
+  cookieHeader: string | null | undefined,
+): Promise<{ email: string } | null> {
   if (!cookieHeader) return null;
   const raw = cookieHeader
     .split(";")
@@ -73,7 +87,10 @@ export async function readSession(cookieHeader: string | null | undefined): Prom
   let payload: string;
   try {
     payload = new TextDecoder().decode(
-      Uint8Array.from(atob(encoded.replace(/-/g, "+").replace(/_/g, "/")), (c) => c.charCodeAt(0)),
+      Uint8Array.from(
+        atob(encoded.replace(/-/g, "+").replace(/_/g, "/")),
+        (c) => c.charCodeAt(0),
+      ),
     );
   } catch {
     return null;

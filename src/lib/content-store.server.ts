@@ -2,13 +2,22 @@
 import { getRequestHeader } from "@tanstack/react-start/server";
 
 import { readSession } from "./auth.server";
-import { CONTENT_TYPES, parseDoc, serializeDoc, slugify, typeById, type ContentDoc } from "./content-schema";
+import {
+  CONTENT_TYPES,
+  pathForType,
+  parseDoc,
+  serializeDoc,
+  slugify,
+  typeById,
+  type ContentDoc,
+} from "./content-schema";
 import type { SaveInput } from "./content-validators";
 import * as gh from "./github.server";
 
 export async function requireAdmin() {
   const session = await readSession(getRequestHeader("cookie"));
-  if (!session) throw new Error("Your session has expired. Please sign in again.");
+  if (!session)
+    throw new Error("Your session has expired. Please sign in again.");
   return session;
 }
 
@@ -21,12 +30,20 @@ export async function loadAll(): Promise<ContentDoc[]> {
   const cfg = gh.getRepoConfig();
   const docs: ContentDoc[] = [];
   for (const type of CONTENT_TYPES) {
-    const files = await gh.listDir(cfg, type.dir);
+    if (type.kind === "file") {
+      const found = await gh.readFile(cfg, type.path);
+      if (!found) continue;
+      const doc = parseDoc(found.content, type.path, type.id);
+      docs.push({ ...doc, type: type.id, sha: found.sha });
+      continue;
+    }
+
+    const files = await gh.listDir(cfg, type.path);
     for (const file of files) {
       const found = await gh.readFile(cfg, file.path);
       if (!found) continue;
-      const doc = parseDoc(found.content, file.path);
-      docs.push({ ...doc, type: doc.type || (type.id as ContentDoc["type"]), sha: found.sha });
+      const doc = parseDoc(found.content, file.path, type.id);
+      docs.push({ ...doc, type: type.id, sha: found.sha });
     }
   }
   return docs.sort((a, b) => (b.date ?? "").localeCompare(a.date ?? ""));
@@ -44,10 +61,14 @@ export async function saveDoc(data: SaveInput) {
   if (!type) throw new Error("Unknown content type.");
   if (!data.body.trim()) throw new Error("Markdown content cannot be empty.");
 
-  const slug = slugify(data.slug?.trim() || data.title);
-  if (!slug) throw new Error("Could not generate a valid slug from that title.");
+  const slug =
+    type.kind === "file"
+      ? slugify(data.slug?.trim() || type.id)
+      : slugify(data.slug?.trim() || data.title);
+  if (!slug)
+    throw new Error("Could not generate a valid slug from that title.");
 
-  const path = `${type.dir}/${slug}.md`;
+  const path = pathForType(type, slug);
   const markdown = serializeDoc(
     {
       title: data.title,
@@ -72,7 +93,11 @@ export async function saveDoc(data: SaveInput) {
   );
 
   if (moving && data.originalPath) {
-    await gh.deleteFile(cfg, data.originalPath, `content(${type.id}): remove ${data.originalPath}`);
+    await gh.deleteFile(
+      cfg,
+      data.originalPath,
+      `content(${type.id}): remove ${data.originalPath}`,
+    );
   }
   return commit;
 }

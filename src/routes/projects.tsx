@@ -13,7 +13,11 @@ export const Route = createFileRoute("/projects")({
           "Machine learning research projects and undergraduate software projects built by Md. Mehedi Hasan, with tools and technologies used.",
       },
       { property: "og:title", content: "Projects — Md. Mehedi Hasan" },
-      { property: "og:description", content: "Research and software projects with the technologies behind them." },
+      {
+        property: "og:description",
+        content:
+          "Research and software projects with the technologies behind them.",
+      },
     ],
   }),
   component: () => (

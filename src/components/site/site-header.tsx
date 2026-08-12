@@ -21,11 +21,17 @@ export function SiteHeader() {
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-background/85 backdrop-blur-md">
       <div className="container-page flex h-16 items-center justify-between gap-4">
-        <Link to="/" className="flex items-center gap-2.5" aria-label="Md. Mehedi Hasan — home">
+        <Link
+          to="/"
+          className="flex items-center gap-2.5"
+          aria-label="Md. Mehedi Hasan — home"
+        >
           <span className="flex h-8 w-8 items-center justify-center rounded-md bg-primary font-mono text-xs font-semibold text-primary-foreground">
             MH
           </span>
-          <span className="hidden text-sm font-medium sm:block">{person.name}</span>
+          <span className="hidden text-sm font-medium sm:block">
+            {person.name}
+          </span>
         </Link>
 
         <nav aria-label="Primary" className="hidden items-center gap-1 lg:flex">
@@ -65,7 +71,10 @@ export function SiteHeader() {
       </div>
 
       {open ? (
-        <nav aria-label="Mobile" className="border-t border-border bg-background lg:hidden">
+        <nav
+          aria-label="Mobile"
+          className="border-t border-border bg-background lg:hidden"
+        >
           <div className="container-page grid gap-1 py-3">
             {nav.map((item) => (
               <Link

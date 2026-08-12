@@ -13,11 +13,15 @@ export function Hero() {
       <div className="container-page relative grid items-center gap-12 py-16 sm:py-24 lg:grid-cols-[1.35fr_1fr]">
         <div>
           <p className="eyebrow">Academic &amp; Research Portfolio</p>
-          <h1 className="mt-4 text-4xl leading-[1.08] sm:text-5xl lg:text-6xl">{person.name}</h1>
+          <h1 className="mt-4 text-4xl leading-[1.08] sm:text-5xl lg:text-6xl">
+            {person.name}
+          </h1>
           <p className="mt-5 max-w-2xl text-base leading-relaxed font-medium text-accent sm:text-lg">
             {person.headline}
           </p>
-          <p className="mt-4 max-w-2xl text-base leading-relaxed text-muted-foreground">{person.summary}</p>
+          <p className="mt-4 max-w-2xl text-base leading-relaxed text-muted-foreground">
+            {person.summary}
+          </p>
 
           <div className="mt-7 flex flex-wrap gap-2">
             {roles.map((r) => (
@@ -35,7 +39,8 @@ export function Hero() {
               to="/research"
               className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90"
             >
-              View Research <ArrowRight className="h-4 w-4" aria-hidden="true" />
+              View Research{" "}
+              <ArrowRight className="h-4 w-4" aria-hidden="true" />
             </Link>
             <Link
               to="/projects"

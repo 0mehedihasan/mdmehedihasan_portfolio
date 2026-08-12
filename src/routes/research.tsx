@@ -14,7 +14,11 @@ export const Route = createFileRoute("/research")({
           "Research interests, assistantship work at AMIRL, and applied machine learning research projects by Md. Mehedi Hasan.",
       },
       { property: "og:title", content: "Research — Md. Mehedi Hasan" },
-      { property: "og:description", content: "Research interests, AMIRL work and applied ML research projects." },
+      {
+        property: "og:description",
+        content:
+          "Research interests, AMIRL work and applied ML research projects.",
+      },
     ],
   }),
   component: () => (

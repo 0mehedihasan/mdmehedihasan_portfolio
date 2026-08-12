@@ -16,12 +16,20 @@ export function PublicationsSection() {
           <li key={p.title}>
             <article className="card-surface p-5 sm:p-6">
               <div className="flex flex-wrap items-center gap-2">
-                <Tag tone={p.status === "Published" ? "accent" : "default"}>{p.status}</Tag>
-                {p.doi ? <span className="font-mono text-xs text-muted-foreground">DOI: {p.doi}</span> : null}
+                <Tag tone={p.status === "Published" ? "accent" : "default"}>
+                  {p.status}
+                </Tag>
+                {p.doi ? (
+                  <span className="font-mono text-xs text-muted-foreground">
+                    DOI: {p.doi}
+                  </span>
+                ) : null}
               </div>
               <h3 className="mt-3 text-xl leading-snug">{p.title}</h3>
               <p className="mt-2 text-sm text-muted-foreground">{p.authors}</p>
-              <p className="mt-1 text-sm text-muted-foreground italic">{p.venue}</p>
+              <p className="mt-1 text-sm text-muted-foreground italic">
+                {p.venue}
+              </p>
               {p.links.length ? (
                 <div className="mt-4 flex flex-wrap gap-3">
                   {p.links.map((l) => (
@@ -59,7 +67,9 @@ export function ResearchProjectsSection() {
         {researchProjects.map((p) => (
           <article key={p.title} className="card-surface flex flex-col p-6">
             <h3 className="text-xl leading-snug">{p.title}</h3>
-            <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{p.summary}</p>
+            <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+              {p.summary}
+            </p>
             <div className="mt-4 flex flex-wrap gap-2">
               {p.focus.map((f) => (
                 <Tag key={f}>{f}</Tag>
@@ -80,7 +90,8 @@ export function ResearchProjectsSection() {
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-1.5 text-sm text-accent link-underline"
                   >
-                    {l.label} <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
+                    {l.label}{" "}
+                    <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
                   </a>
                 ))}
               </div>
@@ -91,10 +102,15 @@ export function ResearchProjectsSection() {
 
       <div className="mt-12">
         <h3 className="text-lg">Undergraduate software projects</h3>
-        <p className="mt-1 text-sm text-muted-foreground">Earlier coursework and development work.</p>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Earlier coursework and development work.
+        </p>
         <ul className="mt-4 grid gap-3 sm:grid-cols-2">
           {softwareProjects.map((p) => (
-            <li key={p.title} className="rounded-lg border border-border bg-background/60 p-4">
+            <li
+              key={p.title}
+              className="rounded-lg border border-border bg-background/60 p-4"
+            >
               <div className="flex items-start justify-between gap-3">
                 <h4 className="text-sm font-medium">{p.title}</h4>
                 <a
@@ -107,7 +123,9 @@ export function ResearchProjectsSection() {
                   <ExternalLink className="h-4 w-4" aria-hidden="true" />
                 </a>
               </div>
-              <p className="mt-2 text-xs leading-relaxed text-muted-foreground">{p.summary}</p>
+              <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
+                {p.summary}
+              </p>
             </li>
           ))}
         </ul>

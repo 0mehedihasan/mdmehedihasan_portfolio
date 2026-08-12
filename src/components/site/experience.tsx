@@ -21,14 +21,23 @@ export function ExperienceSection() {
             <article className="card-surface p-5 sm:p-6">
               <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
                 <h3 className="text-xl">{item.role}</h3>
-                <p className="font-mono text-xs tracking-wide text-muted-foreground">{item.period}</p>
+                <p className="font-mono text-xs tracking-wide text-muted-foreground">
+                  {item.period}
+                </p>
               </div>
               <p className="mt-1 text-sm font-medium">{item.org}</p>
-              {item.meta ? <p className="mt-1 text-sm text-muted-foreground">{item.meta}</p> : null}
+              {item.meta ? (
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {item.meta}
+                </p>
+              ) : null}
               <ul className="mt-4 space-y-2 text-sm leading-relaxed text-muted-foreground">
                 {item.bullets.map((b) => (
                   <li key={b.slice(0, 24)} className="flex gap-2">
-                    <span aria-hidden="true" className="mt-2 h-1 w-1 shrink-0 rounded-full bg-accent" />
+                    <span
+                      aria-hidden="true"
+                      className="mt-2 h-1 w-1 shrink-0 rounded-full bg-accent"
+                    />
                     {b}
                   </li>
                 ))}
@@ -54,7 +63,12 @@ export function ExperienceSection() {
 
 export function EducationSection() {
   return (
-    <Section id="education" tone="surface" eyebrow="Education" title="Academic background">
+    <Section
+      id="education"
+      tone="surface"
+      eyebrow="Education"
+      title="Academic background"
+    >
       <div className="grid gap-4">
         {education.map((e) => (
           <article
@@ -63,14 +77,18 @@ export function EducationSection() {
           >
             <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
               <h3 className={e.featured ? "text-xl" : "text-lg"}>{e.degree}</h3>
-              <p className="font-mono text-xs tracking-wide text-muted-foreground">{e.period}</p>
+              <p className="font-mono text-xs tracking-wide text-muted-foreground">
+                {e.period}
+              </p>
             </div>
             <p className="mt-1 text-sm">{e.institution}</p>
             <p className="mt-2 inline-flex rounded-md bg-highlight px-2.5 py-1 font-mono text-xs text-highlight-foreground">
               {e.result}
             </p>
             {e.notes.length ? (
-              <p className="mt-2 text-sm text-muted-foreground">{e.notes.join(" · ")}</p>
+              <p className="mt-2 text-sm text-muted-foreground">
+                {e.notes.join(" · ")}
+              </p>
             ) : null}
           </article>
         ))}

@@ -12,7 +12,10 @@ export const Route = createFileRoute("/publications")({
           "Peer-reviewed conference and journal publications by Md. Mehedi Hasan in explainable AI and healthcare machine learning.",
       },
       { property: "og:title", content: "Publications — Md. Mehedi Hasan" },
-      { property: "og:description", content: "Peer-reviewed publications in explainable and healthcare AI." },
+      {
+        property: "og:description",
+        content: "Peer-reviewed publications in explainable and healthcare AI.",
+      },
     ],
   }),
   component: () => <PublicationsSection />,

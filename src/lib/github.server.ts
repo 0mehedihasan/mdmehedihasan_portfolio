@@ -59,7 +59,11 @@ function describe(status: number, ghMessage: string): string {
   }
 }
 
-async function gh<T>(cfg: RepoConfig, path: string, init: RequestInit = {}): Promise<T> {
+async function gh<T>(
+  cfg: RepoConfig,
+  path: string,
+  init: RequestInit = {},
+): Promise<T> {
   let res: Response;
   try {
     res = await fetch(`${API}${path}`, {
@@ -74,7 +78,10 @@ async function gh<T>(cfg: RepoConfig, path: string, init: RequestInit = {}): Pro
       },
     });
   } catch {
-    throw new GitHubError("Could not reach GitHub. Check the network connection and try again.", 502);
+    throw new GitHubError(
+      "Could not reach GitHub. Check the network connection and try again.",
+      502,
+    );
   }
 
   if (res.status === 404) throw new GitHubError(describe(404, ""), 404);
@@ -111,9 +118,17 @@ function b64decode(data: string): string {
   return new TextDecoder().decode(bytes);
 }
 
-export type RepoFile = { name: string; path: string; sha: string; size: number };
+export type RepoFile = {
+  name: string;
+  path: string;
+  sha: string;
+  size: number;
+};
 
-export async function listDir(cfg: RepoConfig, dir: string): Promise<RepoFile[]> {
+export async function listDir(
+  cfg: RepoConfig,
+  dir: string,
+): Promise<RepoFile[]> {
   try {
     const data = await gh<Array<RepoFile & { type: string }>>(
       cfg,
@@ -143,7 +158,12 @@ export async function readFile(
   }
 }
 
-export type CommitResult = { sha: string; url: string; path: string; created: boolean };
+export type CommitResult = {
+  sha: string;
+  url: string;
+  path: string;
+  created: boolean;
+};
 
 export async function writeFile(
   cfg: RepoConfig,
@@ -173,9 +193,14 @@ export async function writeFile(
   };
 }
 
-export async function deleteFile(cfg: RepoConfig, path: string, message: string): Promise<CommitResult> {
+export async function deleteFile(
+  cfg: RepoConfig,
+  path: string,
+  message: string,
+): Promise<CommitResult> {
   const existing = await readFile(cfg, path);
-  if (!existing) throw new GitHubError("That file no longer exists on GitHub (404).", 404);
+  if (!existing)
+    throw new GitHubError("That file no longer exists on GitHub (404).", 404);
   const data = await gh<{ commit: { sha: string; html_url: string } }>(
     cfg,
     `/repos/${cfg.owner}/${cfg.repo}/contents/${encodePath(path)}`,
@@ -184,13 +209,20 @@ export async function deleteFile(cfg: RepoConfig, path: string, message: string)
       body: JSON.stringify({ message, sha: existing.sha, branch: cfg.branch }),
     },
   );
-  return { sha: data.commit.sha, url: data.commit.html_url, path, created: false };
+  return {
+    sha: data.commit.sha,
+    url: data.commit.html_url,
+    path,
+    created: false,
+  };
 }
 
 export async function repoInfo(cfg: RepoConfig) {
-  const data = await gh<{ full_name: string; html_url: string; private: boolean; default_branch: string }>(
-    cfg,
-    `/repos/${cfg.owner}/${cfg.repo}`,
-  );
+  const data = await gh<{
+    full_name: string;
+    html_url: string;
+    private: boolean;
+    default_branch: string;
+  }>(cfg, `/repos/${cfg.owner}/${cfg.repo}`);
   return data;
 }

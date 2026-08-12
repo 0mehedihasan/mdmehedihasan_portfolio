@@ -1,8 +1,6 @@
-import profileAsset from "@/assets/profile.png.asset.json";
-
-export const profileImage: string = profileAsset.url;
+export const profileImage: string = "https://i.ibb.co.com/qYXdNpjD/pp.png";
 export const cvUrl: string =
-  "https://raw.githubusercontent.com/0mehedihasan/mdmehedihasan_portfolio/main/public/mdmehedihasan_academic_cv.pdf";
+  "https://drive.google.com/drive/folders/1ZL5LbfuOu2ltZIE8gW8Jyy0xCivFBMqp?usp=sharing";
 
 export const person = {
   name: "Md. Mehedi Hasan",
@@ -61,33 +59,59 @@ export const graduateInterests = [
 export const researchInterests = [
   {
     title: "Machine Learning",
-    detail: "Classical and modern ML pipelines, evaluation design, and leakage-free experimentation.",
+    detail:
+      "Classical and modern ML pipelines, evaluation design, and leakage-free experimentation.",
   },
   {
     title: "Deep Learning",
-    detail: "Transformer-based and graph-based architectures for scientific and clinical data.",
+    detail:
+      "Transformer-based and graph-based architectures for scientific and clinical data.",
   },
   {
     title: "Explainable AI",
-    detail: "SHAP and attention-based interpretability for transparent, clinically useful models.",
+    detail:
+      "SHAP and attention-based interpretability for transparent, clinically useful models.",
   },
   {
     title: "Healthcare AI",
-    detail: "Applied AI for diagnosis support and clinical decision-making tasks.",
+    detail:
+      "Applied AI for diagnosis support and clinical decision-making tasks.",
   },
   {
     title: "Medical Imaging",
-    detail: "2D and 3D structural MRI analysis with multiple instance learning.",
+    detail:
+      "2D and 3D structural MRI analysis with multiple instance learning.",
   },
   {
     title: "Biomedical AI",
-    detail: "Protein–protein interaction prediction and biological network modelling.",
+    detail:
+      "Protein–protein interaction prediction and biological network modelling.",
   },
-  { title: "Computer Vision", detail: "Detection, segmentation, tracking, and keypoint annotation workflows." },
-  { title: "Graph Neural Networks", detail: "Graph representation learning and ensemble graph–transformer models." },
-  { title: "Bioinformatics", detail: "Biological sequence and interaction datasets for predictive modelling." },
-  { title: "Robotics", detail: "Perception and intelligent systems as an emerging research direction." },
-  { title: "Data Science", detail: "End-to-end data analysis, statistics, visualisation, and reporting." },
+  {
+    title: "Computer Vision",
+    detail:
+      "Detection, segmentation, tracking, and keypoint annotation workflows.",
+  },
+  {
+    title: "Graph Neural Networks",
+    detail:
+      "Graph representation learning and ensemble graph–transformer models.",
+  },
+  {
+    title: "Bioinformatics",
+    detail:
+      "Biological sequence and interaction datasets for predictive modelling.",
+  },
+  {
+    title: "Robotics",
+    detail:
+      "Perception and intelligent systems as an emerging research direction.",
+  },
+  {
+    title: "Data Science",
+    detail:
+      "End-to-end data analysis, statistics, visualisation, and reporting.",
+  },
 ];
 
 export type ExperienceItem = {
@@ -176,8 +200,14 @@ export const publications = [
       "2026 5th International Conference on Electrical, Computer & Telecommunication Engineering (ICECTE), Rajshahi, Bangladesh, 29–31 January 2026. IEEE, 2026.",
     doi: "10.1109/ICECTE69292.2026.11429277",
     links: [
-      { label: "IEEE Xplore", url: "https://ieeexplore.ieee.org/document/11429277" },
-      { label: "DOI", url: "https://doi.org/10.1109/ICECTE69292.2026.11429277" },
+      {
+        label: "IEEE Xplore",
+        url: "https://ieeexplore.ieee.org/document/11429277",
+      },
+      {
+        label: "DOI",
+        url: "https://doi.org/10.1109/ICECTE69292.2026.11429277",
+      },
     ],
   },
   {
@@ -210,7 +240,12 @@ export const researchProjects = [
     ],
     linkedPublication:
       "X-GNN: An Explainable Ensemble Graph–Transformer Framework for Human Protein–Protein Interaction Prediction (IEEE ICECTE 2026)",
-    links: [{ label: "IEEE Xplore", url: "https://ieeexplore.ieee.org/document/11429277" }],
+    links: [
+      {
+        label: "IEEE Xplore",
+        url: "https://ieeexplore.ieee.org/document/11429277",
+      },
+    ],
   },
   {
     title: "Vascular Brain Injury Etiologic Dementia",
@@ -229,12 +264,26 @@ export const researchProjects = [
     links: [],
   },
   {
-    title: "Machine Learning Approaches for Early Detection of Parkinson’s Disease",
+    title:
+      "Machine Learning Approaches for Early Detection of Parkinson’s Disease",
     summary:
       "End-to-end machine learning system in Python detecting Parkinson’s disease from voice features using the UCI dataset. Achieved 90% accuracy and 93.33% F1-score with XGBoost, applied patient-level data splitting to prevent leakage, handled class imbalance with SMOTE, and used SHAP for interpretability and clinical transparency.",
-    focus: ["UCI dataset", "XGBoost", "90% accuracy", "93.33% F1-score", "Patient-level splitting", "SMOTE", "SHAP"],
+    focus: [
+      "UCI dataset",
+      "XGBoost",
+      "90% accuracy",
+      "93.33% F1-score",
+      "Patient-level splitting",
+      "SMOTE",
+      "SHAP",
+    ],
     linkedPublication: null,
-    links: [{ label: "GitHub", url: "https://github.com/0mehedihasan/recycleapp-web.git" }],
+    links: [
+      {
+        label: "GitHub",
+        url: "https://github.com/0mehedihasan/recycleapp-web.git",
+      },
+    ],
   },
 ];
 
@@ -259,16 +308,27 @@ export const softwareProjects = [
   },
   {
     title: "School Attendance Management System",
-    summary: "C# desktop application with MS SQL Server for records management, developed in Visual Studio.",
+    summary:
+      "C# desktop application with MS SQL Server for records management, developed in Visual Studio.",
     url: "https://github.com/0mehedihasan/Machine-Learning-Course.git",
   },
 ];
 
 export const skillGroups = [
-  { name: "Programming", items: ["C", "C++", "C#", "Java", "PHP", "Python", "JavaScript"] },
+  {
+    name: "Programming",
+    items: ["C", "C++", "C#", "Java", "PHP", "Python", "JavaScript"],
+  },
   {
     name: "Machine Learning & Data Science",
-    items: ["NumPy", "Pandas", "Scikit-learn", "Matplotlib", "Seaborn", "PyTorch"],
+    items: [
+      "NumPy",
+      "Pandas",
+      "Scikit-learn",
+      "Matplotlib",
+      "Seaborn",
+      "PyTorch",
+    ],
   },
   {
     name: "Data Annotation & Computer Vision",
@@ -284,11 +344,25 @@ export const skillGroups = [
   },
   {
     name: "Web & Tools",
-    items: ["HTML", "CSS", "JSP", "Servlet", "JDBC", "Maven", "Git", "Visual Studio", "Eclipse", "Tomcat"],
+    items: [
+      "HTML",
+      "CSS",
+      "JSP",
+      "Servlet",
+      "JDBC",
+      "Maven",
+      "Git",
+      "Visual Studio",
+      "Eclipse",
+      "Tomcat",
+    ],
   },
   { name: "Databases", items: ["MySQL", "MS SQL Server", "Firebase"] },
   { name: "Platforms", items: ["Google Colab", "Kaggle", "Anaconda"] },
-  { name: "Documentation & Design", items: ["LaTeX", "Canva", "draw.io", "MS Office"] },
+  {
+    name: "Documentation & Design",
+    items: ["LaTeX", "Canva", "draw.io", "MS Office"],
+  },
 ];
 
 export const certifications = [
@@ -297,7 +371,8 @@ export const certifications = [
     issuer: "HackerRank",
     issued: "25 March 2023",
     credential: "Credential ID: 08d501a29bb8",
-    topics: "Scalar Types, Operators & Control Flow, Strings, Collections & Iteration, Modularity, OOP",
+    topics:
+      "Scalar Types, Operators & Control Flow, Strings, Collections & Iteration, Modularity, OOP",
     url: "https://www.hackerrank.com/certificates/08d501a29bb8",
   },
   {
@@ -314,7 +389,8 @@ export const certifications = [
     issuer: "HackerRank",
     issued: "02 December 2022",
     credential: "Credential ID: b827d50ae006",
-    topics: "Cascading and Inheritance, Text Styling Fundamentals, CSS Layouts, Box Model",
+    topics:
+      "Cascading and Inheritance, Text Styling Fundamentals, CSS Layouts, Box Model",
     url: "https://www.hackerrank.com/certificates/b827d50ae006",
   },
   {
@@ -322,7 +398,8 @@ export const certifications = [
     issuer: "Google for Education (Exceed LMS)",
     issued: "Oct 2025",
     credential: "Completion ID: 434840854",
-    topics: "Generative AI, Prompt Engineering, Responsible AI Use in Education",
+    topics:
+      "Generative AI, Prompt Engineering, Responsible AI Use in Education",
     url: null,
   },
   {
@@ -338,7 +415,8 @@ export const certifications = [
     issuer: "Self-directed training",
     issued: null,
     credential: "Training — not an official certification",
-    topics: "Image annotation, object detection, segmentation, tracking, keypoints, annotation quality control.",
+    topics:
+      "Image annotation, object detection, segmentation, tracking, keypoints, annotation quality control.",
     url: null,
   },
 ];
@@ -366,7 +444,8 @@ export const conferenceActivities = [
   },
   {
     role: "Volunteer",
-    event: "International Conference on Computing, Applications, and Systems (COMPAS 2024, 2025 & 2026)",
+    event:
+      "International Conference on Computing, Applications, and Systems (COMPAS 2024, 2025 & 2026)",
     period: "2024 – 2026",
     detail:
       "Assisted with conference logistics, speaker coordination, and attendee support across multiple editions of this international conference.",
@@ -380,7 +459,12 @@ export const conferenceActivities = [
     detail:
       "Progressed from Organizing Chair in 2025 to General Chair in 2026, coordinating an international virtual congress.",
     url: "https://icai.bubt.edu.bd/",
-    highlights: ["700+ participants", "20+ international speakers", "200+ ambassadors", "30+ countries"],
+    highlights: [
+      "700+ participants",
+      "20+ international speakers",
+      "200+ ambassadors",
+      "30+ countries",
+    ],
   },
   {
     role: "Local Arrangement Co-Chair",
@@ -394,7 +478,8 @@ export const conferenceActivities = [
   },
   {
     role: "Organizing Co-Chair",
-    event: "International Congress on Recent Trends in Computer Science (ICRCS 2024 & 2025)",
+    event:
+      "International Congress on Recent Trends in Computer Science (ICRCS 2024 & 2025)",
     period: "Jan 2024 – Dec 2025",
     detail:
       "Co-managed the virtual congress focusing on emerging computer science topics, facilitating seamless online collaboration and presentations.",
@@ -405,7 +490,8 @@ export const conferenceActivities = [
     role: "Organizing Publicity Member",
     event: "IEEE CS BDC Symposium 2024",
     period: "Jan 2024 – Dec 2024",
-    detail: "Managed publicity and outreach to maximize event visibility and engagement across digital platforms.",
+    detail:
+      "Managed publicity and outreach to maximize event visibility and engagement across digital platforms.",
     url: "https://symposium24.ieeecsbdc.org/committee",
     highlights: [],
   },
@@ -451,7 +537,8 @@ export const extracurricular = [
 
 export const awards = [
   {
-    title: "IEEE Computer Society Richard E. Merwin Student Scholarship 2025 — Spring Cycle",
+    title:
+      "IEEE Computer Society Richard E. Merwin Student Scholarship 2025 — Spring Cycle",
     issuer: "IEEE Computer Society",
     issued: "02 October 2025",
     detail:
@@ -523,7 +610,8 @@ export const references = [
   {
     name: "Dr. Md. Shafiqul Islam",
     title: "Assistant Professor",
-    department: "Department of Computer Science & Engineering, University of Asia Pacific (UAP)",
+    department:
+      "Department of Computer Science & Engineering, University of Asia Pacific (UAP)",
     email: "msislam.iu@gmail.com",
     profile: null,
   },

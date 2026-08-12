@@ -14,7 +14,11 @@ import {
 
 export function SkillsSection() {
   return (
-    <Section id="skills" eyebrow="Technical Skills" title="Tools and technologies">
+    <Section
+      id="skills"
+      eyebrow="Technical Skills"
+      title="Tools and technologies"
+    >
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {skillGroups.map((g) => (
           <div key={g.name} className="card-surface p-5">
@@ -33,17 +37,32 @@ export function SkillsSection() {
 
 export function CertificationsSection() {
   return (
-    <Section id="certifications" tone="surface" eyebrow="Training & Certifications" title="Verified learning">
+    <Section
+      id="certifications"
+      tone="surface"
+      eyebrow="Training & Certifications"
+      title="Verified learning"
+    >
       <div className="grid gap-4 sm:grid-cols-2">
         {certifications.map((c) => (
           <article key={c.title} className="card-surface p-5">
             <div className="flex flex-wrap items-baseline justify-between gap-2">
               <h3 className="text-base font-medium">{c.title}</h3>
-              {c.issued ? <span className="font-mono text-xs text-muted-foreground">{c.issued}</span> : null}
+              {c.issued ? (
+                <span className="font-mono text-xs text-muted-foreground">
+                  {c.issued}
+                </span>
+              ) : null}
             </div>
             <p className="mt-1 text-sm text-accent">{c.issuer}</p>
-            {c.topics ? <p className="mt-2 text-sm text-muted-foreground">{c.topics}</p> : null}
-            {c.credential ? <p className="mt-2 font-mono text-xs text-muted-foreground">{c.credential}</p> : null}
+            {c.topics ? (
+              <p className="mt-2 text-sm text-muted-foreground">{c.topics}</p>
+            ) : null}
+            {c.credential ? (
+              <p className="mt-2 font-mono text-xs text-muted-foreground">
+                {c.credential}
+              </p>
+            ) : null}
             {c.url ? (
               <a
                 href={c.url}
@@ -51,7 +70,8 @@ export function CertificationsSection() {
                 rel="noopener noreferrer"
                 className="mt-3 inline-flex items-center gap-1.5 text-sm text-accent link-underline"
               >
-                View certificate <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
+                View certificate{" "}
+                <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
               </a>
             ) : null}
           </article>
@@ -75,10 +95,14 @@ export function ConferenceActivitiesSection() {
             <article className="card-surface p-5 sm:p-6">
               <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
                 <h3 className="text-lg leading-snug">{a.role}</h3>
-                <p className="font-mono text-xs tracking-wide text-muted-foreground">{a.period}</p>
+                <p className="font-mono text-xs tracking-wide text-muted-foreground">
+                  {a.period}
+                </p>
               </div>
               <p className="mt-1 text-sm font-medium">{a.event}</p>
-              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{a.detail}</p>
+              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                {a.detail}
+              </p>
               {a.highlights.length ? (
                 <div className="mt-3 flex flex-wrap gap-2">
                   {a.highlights.map((h) => (
@@ -95,7 +119,8 @@ export function ConferenceActivitiesSection() {
                   rel="noopener noreferrer"
                   className="mt-3 inline-flex items-center gap-1.5 text-sm text-accent link-underline"
                 >
-                  Event link <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
+                  Event link{" "}
+                  <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
                 </a>
               ) : null}
             </article>
@@ -120,9 +145,13 @@ export function ExtracurricularSection() {
             <article className="card-surface h-full p-5">
               <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
                 <h3 className="text-base leading-snug font-medium">{e.role}</h3>
-                <p className="font-mono text-xs text-muted-foreground">{e.period}</p>
+                <p className="font-mono text-xs text-muted-foreground">
+                  {e.period}
+                </p>
               </div>
-              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{e.detail}</p>
+              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                {e.detail}
+              </p>
               {e.url ? (
                 <a
                   href={e.url}
@@ -130,7 +159,8 @@ export function ExtracurricularSection() {
                   rel="noopener noreferrer"
                   className="mt-3 inline-flex items-center gap-1.5 text-sm text-accent link-underline"
                 >
-                  Link <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
+                  Link{" "}
+                  <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
                 </a>
               ) : null}
             </article>
@@ -152,13 +182,19 @@ export function AwardsSection() {
           >
             <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
               <h3 className="flex items-center gap-2 text-lg leading-snug">
-                {a.featured ? <Award className="h-4 w-4 text-accent" aria-hidden="true" /> : null}
+                {a.featured ? (
+                  <Award className="h-4 w-4 text-accent" aria-hidden="true" />
+                ) : null}
                 {a.title}
               </h3>
-              <p className="font-mono text-xs text-muted-foreground">{a.issued}</p>
+              <p className="font-mono text-xs text-muted-foreground">
+                {a.issued}
+              </p>
             </div>
             <p className="mt-1 text-sm text-accent">{a.issuer}</p>
-            <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{a.detail}</p>
+            <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+              {a.detail}
+            </p>
             {a.highlights.length ? (
               <div className="mt-3 flex flex-wrap gap-2">
                 {a.highlights.map((h) => (
@@ -175,7 +211,8 @@ export function AwardsSection() {
                 rel="noopener noreferrer"
                 className="mt-3 inline-flex items-center gap-1.5 text-sm text-accent link-underline"
               >
-                Details <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
+                Details{" "}
+                <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
               </a>
             ) : null}
           </article>
@@ -187,14 +224,22 @@ export function AwardsSection() {
 
 export function MembershipsSection() {
   return (
-    <Section id="memberships" tone="surface" eyebrow="Professional Memberships & Languages" title="Affiliations">
+    <Section
+      id="memberships"
+      tone="surface"
+      eyebrow="Professional Memberships & Languages"
+      title="Affiliations"
+    >
       <div className="grid gap-4 lg:grid-cols-[1.6fr_1fr]">
         <div className="card-surface p-5">
           <h3 className="text-base font-medium">Memberships</h3>
           <ul className="mt-3 grid gap-2 sm:grid-cols-2">
             {memberships.items.map((m) => (
               <li key={m} className="flex gap-2 text-sm text-muted-foreground">
-                <span aria-hidden="true" className="mt-2 h-1 w-1 shrink-0 rounded-full bg-accent" />
+                <span
+                  aria-hidden="true"
+                  className="mt-2 h-1 w-1 shrink-0 rounded-full bg-accent"
+                />
                 {m}
               </li>
             ))}
@@ -227,8 +272,13 @@ export function ReferencesSection() {
           <article key={r.name} className="card-surface p-5">
             <h3 className="text-base font-medium">{r.name}</h3>
             <p className="mt-1 text-sm text-accent">{r.title}</p>
-            <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{r.department}</p>
-            <a href={`mailto:${r.email}`} className="mt-3 block text-sm link-underline break-all">
+            <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+              {r.department}
+            </p>
+            <a
+              href={`mailto:${r.email}`}
+              className="mt-3 block text-sm link-underline break-all"
+            >
               {r.email}
             </a>
             {r.profile ? (
@@ -238,7 +288,8 @@ export function ReferencesSection() {
                 rel="noopener noreferrer"
                 className="mt-2 inline-flex items-center gap-1.5 text-sm text-accent link-underline"
               >
-                Faculty profile <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
+                Faculty profile{" "}
+                <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
               </a>
             ) : null}
           </article>
