@@ -11,6 +11,9 @@ export default defineConfig({
   plugins: [
     tanstackStart({ server: { entry: "server" } }),
     nitro({
+      // Radix's SSR output imports tslib at runtime. Bundle it so the Vercel
+      // function does not rely on an external node_modules copy being retained.
+      noExternals: ["tslib"],
       preset: "vercel",
     }),
     react(),
