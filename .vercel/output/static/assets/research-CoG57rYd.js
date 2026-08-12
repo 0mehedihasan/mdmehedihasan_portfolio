@@ -1,1 +1,0 @@
-import{n as e}from"./research-Co2Z40x9.js";import{M as t}from"./index-6YABw_Dw.js";import{i as n,n as r}from"./experience-Bm9iUs5B.js";var i=t(),a=()=>(0,i.jsxs)(i.Fragment,{children:[(0,i.jsx)(n,{}),(0,i.jsx)(r,{}),(0,i.jsx)(e,{})]});export{a as component};

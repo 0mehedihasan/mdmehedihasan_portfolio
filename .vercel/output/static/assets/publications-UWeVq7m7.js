@@ -1,1 +1,0 @@
-import{t as e}from"./research-Co2Z40x9.js";import{M as t}from"./index-6YABw_Dw.js";var n=t(),r=()=>(0,n.jsx)(e,{});export{r as component};
