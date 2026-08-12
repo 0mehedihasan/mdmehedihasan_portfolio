@@ -31,21 +31,18 @@ import {
   slugify,
   type ContentDoc,
   type ContentTypeId,
+  type DetectedContentType,
+  type Frontmatter,
+  type FrontmatterValue,
+  type SchemaField,
   typeById,
 } from "@/lib/content-schema";
 import { cn } from "@/lib/utils";
 
 type EditorState = {
-  type: ContentTypeId;
-  title: string;
+  type: DetectedContentType;
   slug: string;
-  date: string;
-  tags: string;
-  image: string;
-  summary: string;
-  abstract: string;
-  extra: Record<string, string>;
-  draft: boolean;
+  frontmatter: Frontmatter;
   body: string;
   originalPath: string | null;
 };
@@ -56,15 +53,8 @@ function blankDoc(type: ContentTypeId): EditorState {
     kind?.kind === "file" ? type : slugify(kind?.label ?? type);
   return {
     type,
-    title: kind?.label ?? "New content",
     slug: defaultSlug,
-    date: new Date().toISOString().slice(0, 10),
-    tags: "",
-    image: "",
-    summary: "",
-    abstract: "",
-    extra: {},
-    draft: true,
+    frontmatter: { type, draft: true },
     body: "",
     originalPath: null,
   };
@@ -73,18 +63,23 @@ function blankDoc(type: ContentTypeId): EditorState {
 function mapDoc(doc: ContentDoc): EditorState {
   return {
     type: doc.type,
-    title: doc.title,
     slug: doc.slug,
-    date: doc.date,
-    tags: doc.tags.join(", "),
-    image: doc.image ?? "",
-    summary: doc.summary ?? "",
-    abstract: doc.abstract ?? "",
-    extra: doc.extra ?? {},
-    draft: Boolean(doc.draft),
+    frontmatter: doc.frontmatter,
     body: doc.body,
     originalPath: doc.path,
   };
+}
+
+function textValue(value: FrontmatterValue | undefined): string {
+  return Array.isArray(value)
+    ? value.join(", ")
+    : value == null
+      ? ""
+      : String(value);
+}
+
+function draftValue(frontmatter: Frontmatter): boolean {
+  return frontmatter["draft"] === true || frontmatter["draft"] === "true";
 }
 
 export const Route = createFileRoute("/admin")({
@@ -163,13 +158,10 @@ function AdminPage() {
   const filtered = useMemo(() => {
     const term = filter.trim().toLowerCase();
     return content.filter((item) => {
-      const matchesType =
-        item.type === selectedType ||
-        selectedType === "profile" ||
-        selectedType === "about";
+      const matchesType = item.type === selectedType;
       const matchesSearch = !term
         ? true
-        : `${item.title} ${item.slug} ${item.summary ?? ""} ${item.body} ${item.path}`
+        : `${item.title} ${item.slug} ${item.summary} ${item.body} ${item.path}`
             .toLowerCase()
             .includes(term);
       return matchesType && matchesSearch;
@@ -185,36 +177,38 @@ function AdminPage() {
     [content],
   );
 
-  const currentType = typeById(draft.type) ?? CONTENT_TYPES[0];
-  const currentPath = currentType
-    ? pathForType(
-        currentType,
-        draft.slug || slugify(draft.title || currentType.label),
-      )
-    : "";
+  const currentType = typeById(draft.type);
+  const currentPath =
+    draft.originalPath ??
+    (currentType
+      ? pathForType(
+          currentType,
+          draft.slug ||
+            slugify(
+              textValue(
+                draft.frontmatter["title"] ?? draft.frontmatter["name"],
+              ) || currentType.label,
+            ),
+        )
+      : "");
 
   async function onSave(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setSaving(true);
     setActionMessage("");
     try {
+      if (!currentType)
+        throw new Error(
+          "Unknown content types are read-only. Add explicit content_type metadata before editing.",
+        );
       const result = await saveContent({
-        type: draft.type,
-        title: draft.title,
-        slug: draft.slug,
-        date: draft.date,
-        tags: draft.tags
-          .split(",")
-          .map((tag) => tag.trim())
-          .filter(Boolean),
-        image: draft.image.trim() || null,
-        summary: draft.summary.trim() || null,
-        abstract:
-          draft.type === "research" ? draft.abstract.trim() || null : null,
-        extra: draft.extra,
-        draft: draft.draft,
-        body: draft.body,
-        originalPath: draft.originalPath,
+        data: {
+          type: currentType.id,
+          slug: draft.slug,
+          frontmatter: draft.frontmatter,
+          body: draft.body,
+          originalPath: draft.originalPath,
+        },
       });
       setActionMessage(
         result.ok
@@ -227,7 +221,7 @@ function AdminPage() {
           data: { path: result.commit.path },
         });
         if (refreshed.ok && refreshed.doc) {
-          setDraft(mapDoc({ ...refreshed.doc, type: draft.type }));
+          setDraft(mapDoc(refreshed.doc));
         }
       }
     } catch (error) {
@@ -247,7 +241,7 @@ function AdminPage() {
   async function selectDoc(doc: ContentDoc) {
     setLoading(true);
     setActionMessage("");
-    setSelectedType(doc.type);
+    if (doc.type !== "unknown") setSelectedType(doc.type);
     try {
       const result = await getContent({ data: { path: doc.path } });
       if (!result.ok || !result.doc) {
@@ -256,7 +250,7 @@ function AdminPage() {
         );
         return;
       }
-      setDraft(mapDoc({ ...result.doc, type: doc.type }));
+      setDraft(mapDoc(result.doc));
     } catch (error) {
       setActionMessage(
         error instanceof Error
@@ -275,13 +269,19 @@ function AdminPage() {
   }
 
   async function onDuplicate() {
-    const copyTitle = draft.title.startsWith("Copy of ")
-      ? draft.title
-      : `Copy of ${draft.title}`;
-    const copySlug = slugify(`${draft.slug || draft.title}-copy`);
+    const title = textValue(
+      draft.frontmatter["title"] ?? draft.frontmatter["name"] ?? draft.slug,
+    );
+    const copySlug = slugify(`${draft.slug || title}-copy`);
     setDraft((prev) => ({
       ...prev,
-      title: copyTitle,
+      frontmatter: {
+        ...prev.frontmatter,
+        ...("title" in prev.frontmatter
+          ? { title: title.startsWith("Copy of ") ? title : `Copy of ${title}` }
+          : {}),
+        ...(prev.type !== "unknown" ? { slug: copySlug } : {}),
+      },
       slug: copySlug,
       originalPath: null,
     }));
@@ -292,7 +292,7 @@ function AdminPage() {
     if (!deleteTarget) return;
     setSaving(true);
     try {
-      const result = await deleteContent({ path: deleteTarget.path });
+      const result = await deleteContent({ data: { path: deleteTarget.path } });
       setActionMessage(
         result.ok
           ? result.message
@@ -306,6 +306,22 @@ function AdminPage() {
     } finally {
       setSaving(false);
     }
+  }
+
+  function updateField(field: SchemaField, value: string | boolean) {
+    setDraft((previous) => ({
+      ...previous,
+      frontmatter: {
+        ...previous.frontmatter,
+        [field.key]:
+          field.kind === "tags"
+            ? String(value)
+                .split(",")
+                .map((item) => item.trim())
+                .filter(Boolean)
+            : value,
+      },
+    }));
   }
 
   return (
@@ -421,16 +437,22 @@ function AdminPage() {
             <div className="card-surface p-4">
               <p className="eyebrow">Status</p>
               <p className="mt-2 text-sm">
-                {draft.draft ? "GitHub draft" : "GitHub published"}
+                {draftValue(draft.frontmatter)
+                  ? "GitHub draft"
+                  : "GitHub published"}
               </p>
             </div>
             <div className="card-surface p-4">
               <p className="eyebrow">Last updated</p>
-              <p className="mt-2 text-sm">{draft.date || "Today"}</p>
+              <p className="mt-2 text-sm">
+                {textValue(
+                  draft.frontmatter["updated"] ?? draft.frontmatter["date"],
+                ) || "Unknown"}
+              </p>
             </div>
             <div className="card-surface p-4">
               <p className="eyebrow">Current type</p>
-              <p className="mt-2 text-sm">{currentType.label}</p>
+              <p className="mt-2 text-sm">{currentType?.label ?? "Unknown"}</p>
             </div>
             <div className="card-surface p-4">
               <p className="eyebrow">Deployment</p>
@@ -483,112 +505,92 @@ function AdminPage() {
                 </div>
               </div>
 
-              <div className="grid gap-4 sm:grid-cols-2">
-                <label className="grid gap-1.5 text-sm">
-                  <span>Content type</span>
-                  <select
-                    value={draft.type}
-                    onChange={(e) =>
-                      setDraft((prev) => ({
-                        ...prev,
-                        type: e.target.value as ContentTypeId,
-                      }))
-                    }
-                    className="rounded-md border border-border bg-background px-3 py-2"
-                  >
-                    {CONTENT_TYPES.map((type) => (
-                      <option key={type.id} value={type.id}>
-                        {type.label}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <label className="grid gap-1.5 text-sm">
-                  <span>Slug</span>
-                  <Input
-                    value={draft.slug}
-                    onChange={(e) =>
-                      setDraft((prev) => ({ ...prev, slug: e.target.value }))
-                    }
-                  />
-                </label>
-              </div>
+              {draft.originalPath ? (
+                <p className="rounded-md border border-border bg-surface px-3 py-2 text-sm text-muted-foreground">
+                  Content type:{" "}
+                  <strong>{currentType?.label ?? "Unknown"}</strong>. Existing
+                  files keep their detected type and path.
+                </p>
+              ) : (
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <label className="grid gap-1.5 text-sm">
+                    <span>Content type</span>
+                    <select
+                      value={currentType?.id ?? ""}
+                      onChange={(e) =>
+                        createNew(e.target.value as ContentTypeId)
+                      }
+                      className="rounded-md border border-border bg-background px-3 py-2"
+                    >
+                      {CONTENT_TYPES.map((type) => (
+                        <option key={type.id} value={type.id}>
+                          {type.label}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label className="grid gap-1.5 text-sm">
+                    <span>Slug</span>
+                    <Input
+                      value={draft.slug}
+                      onChange={(e) =>
+                        setDraft((prev) => ({ ...prev, slug: e.target.value }))
+                      }
+                    />
+                  </label>
+                </div>
+              )}
 
-              <label className="grid gap-1.5 text-sm">
-                <span>Title</span>
-                <Input
-                  value={draft.title}
-                  onChange={(e) =>
-                    setDraft((prev) => ({ ...prev, title: e.target.value }))
-                  }
-                />
-              </label>
-
-              <div className="grid gap-4 sm:grid-cols-2">
-                <label className="grid gap-1.5 text-sm">
-                  <span>Date</span>
-                  <Input
-                    type="date"
-                    value={draft.date}
-                    onChange={(e) =>
-                      setDraft((prev) => ({ ...prev, date: e.target.value }))
-                    }
-                  />
+              {currentType?.fields.map((field) => (
+                <label key={field.key} className="grid gap-1.5 text-sm">
+                  <span>
+                    {field.label}
+                    {field.required ? " *" : ""}
+                  </span>
+                  {field.kind === "checkbox" ? (
+                    <input
+                      type="checkbox"
+                      checked={
+                        draft.frontmatter[field.key] === true ||
+                        draft.frontmatter[field.key] === "true"
+                      }
+                      onChange={(e) => updateField(field, e.target.checked)}
+                    />
+                  ) : field.kind === "textarea" ? (
+                    <Textarea
+                      value={textValue(draft.frontmatter[field.key])}
+                      onChange={(e) => updateField(field, e.target.value)}
+                    />
+                  ) : (
+                    <Input
+                      type={
+                        field.kind === "date"
+                          ? "date"
+                          : field.kind === "url"
+                            ? "url"
+                            : "text"
+                      }
+                      value={textValue(draft.frontmatter[field.key])}
+                      onChange={(e) => updateField(field, e.target.value)}
+                      placeholder={
+                        field.kind === "tags"
+                          ? "Separate values with commas"
+                          : undefined
+                      }
+                    />
+                  )}
                 </label>
-                <label className="grid gap-1.5 text-sm">
-                  <span>Tags</span>
-                  <Input
-                    value={draft.tags}
-                    onChange={(e) =>
-                      setDraft((prev) => ({ ...prev, tags: e.target.value }))
-                    }
-                  />
-                </label>
-              </div>
-
-              {draft.type === "research" ? (
-                <label className="grid gap-1.5 text-sm">
-                  <span>Abstract</span>
-                  <Textarea
-                    value={draft.abstract}
-                    onChange={(e) =>
-                      setDraft((prev) => ({
-                        ...prev,
-                        abstract: e.target.value,
-                      }))
-                    }
-                    placeholder="Optional research abstract"
-                  />
-                </label>
-              ) : null}
-
-              <div className="grid gap-4 sm:grid-cols-2">
-                <label className="grid gap-1.5 text-sm">
-                  <span>Summary</span>
-                  <Textarea
-                    value={draft.summary}
-                    onChange={(e) =>
-                      setDraft((prev) => ({ ...prev, summary: e.target.value }))
-                    }
-                  />
-                </label>
-                <label className="grid gap-1.5 text-sm">
-                  <span>Image URL</span>
-                  <Textarea
-                    value={draft.image}
-                    onChange={(e) =>
-                      setDraft((prev) => ({ ...prev, image: e.target.value }))
-                    }
-                  />
-                </label>
-              </div>
+              ))}
 
               <label className="flex items-center gap-2 text-sm">
                 <input
                   type="checkbox"
-                  checked={draft.draft}
+                  checked={draftValue(draft.frontmatter)}
                   onChange={(e) =>
-                    setDraft((prev) => ({ ...prev, draft: e.target.checked }))
+                    updateField(
+                      { key: "draft", label: "GitHub draft", kind: "checkbox" },
+                      e.target.checked,
+                    )
                   }
                 />
                 Save as GitHub draft (not yet deployed)
@@ -630,14 +632,6 @@ function AdminPage() {
                   </TabsContent>
                   <TabsContent value="preview" className="mt-4">
                     <div className="card-surface p-4">
-                      {draft.type === "research" && draft.abstract ? (
-                        <div className="mb-5 border-l-2 border-accent bg-surface p-4">
-                          <p className="eyebrow">Abstract</p>
-                          <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                            {draft.abstract}
-                          </p>
-                        </div>
-                      ) : null}
                       <Markdown>
                         {draft.body ||
                           "Start typing Markdown to see the rendered output."}
@@ -659,7 +653,7 @@ function AdminPage() {
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => createNew(draft.type)}
+                  onClick={() => createNew(currentType?.id ?? selectedType)}
                 >
                   <Plus className="h-4 w-4" /> New draft
                 </Button>
@@ -670,14 +664,6 @@ function AdminPage() {
               <p className="eyebrow">Live Preview · GitHub content</p>
               <h2 className="mt-1 text-xl">Rendered Markdown</h2>
               <div className="mt-4 rounded-lg border border-border bg-background p-5">
-                {draft.type === "research" && draft.abstract ? (
-                  <div className="mb-5 border-l-2 border-accent bg-surface p-4">
-                    <p className="eyebrow">Abstract</p>
-                    <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                      {draft.abstract}
-                    </p>
-                  </div>
-                ) : null}
                 <Markdown>
                   {draft.body ||
                     "Start typing Markdown to see the rendered output."}

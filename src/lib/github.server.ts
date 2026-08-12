@@ -142,6 +142,38 @@ export async function listDir(
   }
 }
 
+/** Lists every Markdown file below a directory using GitHub's recursive tree API. */
+export async function listMarkdownFiles(
+  cfg: RepoConfig,
+  directory = "content",
+): Promise<RepoFile[]> {
+  try {
+    const tree = await gh<{
+      tree: Array<{ path: string; type: string; sha: string; size?: number }>;
+    }>(
+      cfg,
+      `/repos/${cfg.owner}/${cfg.repo}/git/trees/${encodeURIComponent(cfg.branch)}?recursive=1`,
+    );
+    const prefix = `${directory.replace(/\/+$/, "")}/`;
+    return tree.tree
+      .filter(
+        (entry) =>
+          entry.type === "blob" &&
+          entry.path.startsWith(prefix) &&
+          entry.path.endsWith(".md"),
+      )
+      .map((entry) => ({
+        name: entry.path.split("/").pop() ?? entry.path,
+        path: entry.path,
+        sha: entry.sha,
+        size: entry.size ?? 0,
+      }));
+  } catch (error) {
+    if (error instanceof GitHubError && error.status === 404) return [];
+    throw error;
+  }
+}
+
 export async function readFile(
   cfg: RepoConfig,
   path: string,

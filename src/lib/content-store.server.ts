@@ -3,7 +3,6 @@ import { getRequestHeader } from "@tanstack/react-start/server";
 
 import { readSession } from "./auth.server";
 import {
-  CONTENT_TYPES,
   pathForType,
   parseDoc,
   serializeDoc,
@@ -28,24 +27,18 @@ export function toMessage(error: unknown): string {
 
 export async function loadAll(): Promise<ContentDoc[]> {
   const cfg = gh.getRepoConfig();
-  const docs: ContentDoc[] = [];
-  for (const type of CONTENT_TYPES) {
-    if (type.kind === "file") {
-      const found = await gh.readFile(cfg, type.path);
-      if (!found) continue;
-      const doc = parseDoc(found.content, type.path, type.id);
-      docs.push({ ...doc, type: type.id, sha: found.sha });
-      continue;
-    }
-
-    const files = await gh.listDir(cfg, type.path);
-    for (const file of files) {
-      const found = await gh.readFile(cfg, file.path);
-      if (!found) continue;
-      const doc = parseDoc(found.content, file.path, type.id);
-      docs.push({ ...doc, type: type.id, sha: found.sha });
-    }
-  }
+  const files = await gh.listMarkdownFiles(cfg);
+  const results = (
+    await Promise.all(
+      files.map(async (file) => {
+        const found = await gh.readFile(cfg, file.path);
+        return found
+          ? { ...parseDoc(found.content, file.path), sha: found.sha }
+          : null;
+      }),
+    )
+  );
+  const docs: ContentDoc[] = results.filter((doc) => doc !== null);
   return docs.sort((a, b) => (b.date ?? "").localeCompare(a.date ?? ""));
 }
 
@@ -59,34 +52,41 @@ export async function readDoc(path: string) {
 export async function saveDoc(data: SaveInput) {
   const type = typeById(data.type);
   if (!type) throw new Error("Unknown content type.");
-  if (!data.body.trim()) throw new Error("Markdown content cannot be empty.");
-
   const slug =
     type.kind === "file"
       ? slugify(data.slug?.trim() || type.id)
-      : slugify(data.slug?.trim() || data.title);
+      : slugify(
+          data.slug?.trim() ||
+            String(
+              data.frontmatter["slug"] ??
+                data.frontmatter["title"] ??
+                data.frontmatter["name"] ??
+                "",
+            ),
+        );
   if (!slug)
     throw new Error("Could not generate a valid slug from that title.");
 
   const path = pathForType(type, slug);
-  const markdown = serializeDoc(
-    {
-      title: data.title,
-      slug,
-      type: type.id,
-      date: data.date?.trim() || new Date().toISOString().slice(0, 10),
-      tags: data.tags ?? [],
-      summary: data.summary ?? "",
-      abstract: data.type === "research" ? (data.abstract ?? "") : "",
-      image: data.image ?? "",
-      draft: Boolean(data.draft),
-      extra: data.extra ?? {},
-    },
-    data.body,
-  );
-
   const cfg = gh.getRepoConfig();
   const moving = Boolean(data.originalPath && data.originalPath !== path);
+  const existing = data.originalPath
+    ? await gh.readFile(cfg, data.originalPath)
+    : null;
+  const original = existing
+    ? parseDoc(existing.content, data.originalPath ?? "")
+    : null;
+  const frontmatter = {
+    ...(original?.frontmatter ?? {}),
+    ...data.frontmatter,
+    type: type.id,
+    ...(type.kind === "collection" ? { slug } : {}),
+  };
+  const markdown = serializeDoc(
+    frontmatter,
+    data.body,
+    original?.rawFrontmatter ?? null,
+  );
   const commit = await gh.writeFile(
     cfg,
     path,
