@@ -1,0 +1,1 @@
+import{s as e}from"./records-DYR1j-Cb.js";import{n as t}from"./research-Co2Z40x9.js";import{M as n}from"./index-6YABw_Dw.js";var r=n(),i=()=>(0,r.jsxs)(r.Fragment,{children:[(0,r.jsx)(t,{}),(0,r.jsx)(e,{})]});export{i as component};

@@ -1,0 +1,1 @@
+import{a as e,i as t,n,o as r,r as i,t as a}from"./records-DYR1j-Cb.js";import{M as o}from"./index-6YABw_Dw.js";var s=o(),c=()=>(0,s.jsxs)(s.Fragment,{children:[(0,s.jsx)(i,{}),(0,s.jsx)(n,{}),(0,s.jsx)(t,{}),(0,s.jsx)(a,{}),(0,s.jsx)(e,{}),(0,s.jsx)(r,{})]});export{c as component};
