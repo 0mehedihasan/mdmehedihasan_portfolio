@@ -1,115 +1,96 @@
 import { Link } from "@tanstack/react-router";
-import { ArrowRight, Download, Mail, MapPin } from "lucide-react";
+import { ArrowDownRight, Download } from "lucide-react";
 
-import { cvUrl, person, profileImage, roles } from "@/content/cv";
+import { cvUrl, person, profileImage } from "@/content/cv";
+
+const domains = ["ML / DL", "XAI", "COMPUTER VISION", "GNN", "DATA", "SYSTEMS"];
 
 export function Hero() {
   return (
-    <section className="relative overflow-hidden">
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-0 opacity-[0.35] [background-image:linear-gradient(to_right,var(--color-border)_1px,transparent_1px),linear-gradient(to_bottom,var(--color-border)_1px,transparent_1px)] [background-size:64px_64px] [mask-image:radial-gradient(ellipse_at_top,black,transparent_75%)]"
-      />
-      <div className="container-page relative grid items-center gap-12 py-16 sm:py-24 lg:grid-cols-[1.35fr_1fr]">
+    <section className="relative overflow-hidden border-b border-border">
+      <div className="container-page grid gap-10 py-16 sm:py-24 lg:grid-cols-[1.3fr_.7fr] lg:items-end">
         <div>
-          <p className="eyebrow">Academic &amp; Research Portfolio</p>
-          <h1 className="mt-4 text-4xl leading-[1.08] sm:text-5xl lg:text-6xl">
+          <p className="eyebrow">
+            Computer Science · AI Research · Machine Learning
+          </p>
+          <h1 className="mt-5 max-w-4xl text-5xl leading-[.95] sm:text-6xl lg:text-7xl">
             {person.name}
           </h1>
-          <p className="mt-5 max-w-2xl text-base leading-relaxed font-medium text-accent sm:text-lg">
-            {person.headline}
+          <p className="mt-6 max-w-2xl font-serif text-2xl leading-snug text-primary sm:text-3xl">
+            Researcher and Machine Learning Engineer building intelligent
+            systems across AI, data, and software engineering.
           </p>
-          <p className="mt-4 max-w-2xl text-base leading-relaxed text-muted-foreground">
+          <p className="mt-5 max-w-2xl text-sm leading-7 text-muted-foreground sm:text-base">
             {person.summary}
           </p>
-
-          <div className="mt-7 flex flex-wrap gap-2">
-            {roles.map((r) => (
-              <span
-                key={r}
-                className="rounded-full border border-border bg-card px-3 py-1 text-xs text-muted-foreground"
-              >
-                {r}
-              </span>
-            ))}
-          </div>
-
-          <div className="mt-8 flex flex-wrap gap-2.5">
+          <div className="mt-8 flex flex-wrap gap-3">
             <Link
               to="/research"
-              className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90"
+              className="inline-flex items-center gap-2 bg-primary px-4 py-2.5 font-mono text-xs font-semibold tracking-wide text-primary-foreground transition-opacity hover:opacity-85"
             >
-              View Research{" "}
-              <ArrowRight className="h-4 w-4" aria-hidden="true" />
+              VIEW RESEARCH <ArrowDownRight className="h-4 w-4" />
             </Link>
             <Link
               to="/projects"
-              className="rounded-md border border-border bg-card px-4 py-2.5 text-sm font-medium transition-colors hover:bg-surface"
+              className="inline-flex items-center gap-2 border border-border px-4 py-2.5 font-mono text-xs font-semibold tracking-wide hover:border-accent hover:text-accent"
             >
-              View Projects
-            </Link>
-            <Link
-              to="/publications"
-              className="rounded-md border border-border bg-card px-4 py-2.5 text-sm font-medium transition-colors hover:bg-surface"
-            >
-              Publications
+              VIEW PROJECTS
             </Link>
             <a
               href={cvUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 rounded-md border border-border bg-card px-4 py-2.5 text-sm font-medium transition-colors hover:bg-surface"
+              className="inline-flex items-center gap-2 border border-border px-4 py-2.5 font-mono text-xs font-semibold tracking-wide hover:border-accent hover:text-accent"
             >
-              <Download className="h-4 w-4" aria-hidden="true" /> Download CV
-            </a>
-            <a
-              href={`mailto:${person.email}`}
-              className="inline-flex items-center gap-2 rounded-md border border-accent px-4 py-2.5 text-sm font-medium text-accent transition-colors hover:bg-highlight"
-            >
-              <Mail className="h-4 w-4" aria-hidden="true" /> Contact Me
+              <Download className="h-3.5 w-3.5" /> CV
             </a>
           </div>
-
-          <div className="mt-8 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm">
-            {person.links.map((l) => (
-              <a
-                key={l.label}
-                href={l.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-muted-foreground link-underline hover:text-foreground"
+          <div className="mt-10 flex flex-wrap gap-x-4 gap-y-2 border-y border-border py-4">
+            {domains.map((domain) => (
+              <span
+                key={domain}
+                className="font-mono text-[.67rem] tracking-[.08em] text-muted-foreground"
               >
-                {l.label}
-              </a>
+                {domain}
+              </span>
             ))}
           </div>
-
-          <p className="mt-5 flex items-center gap-2 text-sm text-muted-foreground">
-            <MapPin className="h-4 w-4" aria-hidden="true" /> {person.location}
-          </p>
         </div>
-
-        <div className="relative mx-auto w-full max-w-sm lg:max-w-none">
-          <div className="card-surface overflow-hidden p-2">
+        <div className="grid gap-4 sm:grid-cols-[.8fr_1.2fr] lg:grid-cols-1">
+          <div className="terminal order-2 p-5 sm:order-1 lg:order-2">
+            <p className="font-mono text-[.65rem] tracking-[.16em] text-accent">
+              RESEARCH WORKSTATION / STATUS
+            </p>
+            <div className="mt-4 space-y-2 terminal-line">
+              <p>
+                <strong>$</strong> whoami
+              </p>
+              <p className="pl-4">md.mehedi.hasan</p>
+              <p>
+                <strong>$</strong> research --current
+              </p>
+              <p className="pl-4">AI / ML / Computer Vision / GNN</p>
+              <p>
+                <strong>$</strong> status
+              </p>
+              <p className="pl-4 text-[#73d4a5]">
+                Researching · Building · Publishing
+              </p>
+            </div>
+          </div>
+          <figure className="relative order-1 overflow-hidden border border-border bg-muted sm:order-2 lg:order-1">
             <img
               src={profileImage}
-              alt="Portrait of Md. Mehedi Hasan, Research Assistant at AMIRL"
+              alt="Portrait of Md. Mehedi Hasan"
               width={1152}
               height={1350}
               fetchPriority="high"
-              className="aspect-[4/5] w-full rounded-md object-cover"
+              className="aspect-[1.06] w-full object-cover object-top grayscale-[18%]"
             />
-          </div>
-          <dl className="card-surface mt-4 grid grid-cols-2 divide-x divide-border">
-            <div className="p-4">
-              <dt className="eyebrow">CGPA</dt>
-              <dd className="mt-1 font-serif text-2xl">3.82/4.00</dd>
-            </div>
-            <div className="p-4">
-              <dt className="eyebrow">Publications</dt>
-              <dd className="mt-1 font-serif text-2xl">2</dd>
-            </div>
-          </dl>
+            <figcaption className="absolute bottom-0 left-0 right-0 border-t border-border bg-background/90 px-4 py-3 font-mono text-[.65rem] tracking-[.12em] text-muted-foreground">
+              RESEARCH ASSISTANT / AMIRL
+            </figcaption>
+          </figure>
         </div>
       </div>
     </section>

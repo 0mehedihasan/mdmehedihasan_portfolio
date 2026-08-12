@@ -2,35 +2,34 @@ import { Link } from "@tanstack/react-router";
 import { Menu, X } from "lucide-react";
 import { useState } from "react";
 
-import { ThemeToggle } from "@/components/theme-toggle";
 import { cvUrl, person } from "@/content/cv";
 
 const nav = [
-  { label: "About", to: "/", hash: "about" as string | undefined },
   { label: "Research", to: "/research", hash: undefined },
-  { label: "Publications", to: "/publications", hash: undefined },
   { label: "Projects", to: "/projects", hash: undefined },
-  { label: "Activities", to: "/activities", hash: undefined },
-  { label: "Notes", to: "/notes", hash: undefined },
-  { label: "Search", to: "/search", hash: undefined },
+  { label: "Publications", to: "/publications", hash: undefined },
+  { label: "Experience", to: "/", hash: "experience" as string | undefined },
+  { label: "Engineering", to: "/", hash: "engineering" as string | undefined },
+  { label: "Writing", to: "/notes", hash: undefined },
+  { label: "About", to: "/", hash: "about" as string | undefined },
 ] as const;
 
 export function SiteHeader() {
   const [open, setOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-50 border-b border-border bg-background/85 backdrop-blur-md">
-      <div className="container-page flex h-16 items-center justify-between gap-4">
+    <header className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur-md">
+      <div className="container-page flex h-[4.25rem] items-center justify-between gap-4">
         <Link
           to="/"
           className="flex items-center gap-2.5"
           aria-label="Md. Mehedi Hasan — home"
         >
-          <span className="flex h-8 w-8 items-center justify-center rounded-md bg-primary font-mono text-xs font-semibold text-primary-foreground">
-            MH
+          <span className="font-mono text-sm font-semibold tracking-[.12em]">
+            MEHEDI HASAN
           </span>
-          <span className="hidden text-sm font-medium sm:block">
-            {person.name}
+          <span className="hidden border-l border-border pl-2 font-mono text-[.6rem] tracking-[.1em] text-muted-foreground sm:block">
+            RESEARCHER / ML ENGINEER
           </span>
         </Link>
 
@@ -40,7 +39,7 @@ export function SiteHeader() {
               key={item.label}
               to={item.to}
               {...(item.hash ? { hash: item.hash } : {})}
-              className="rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-surface hover:text-foreground"
+              className="px-2 py-2 font-mono text-[.64rem] tracking-wide text-muted-foreground transition-colors hover:text-accent"
               activeProps={{ className: "text-foreground" }}
             >
               {item.label}
@@ -49,18 +48,21 @@ export function SiteHeader() {
         </nav>
 
         <div className="flex items-center gap-2">
+          <span className="hidden items-center gap-2 font-mono text-[.62rem] tracking-[.1em] text-[#73d4a5] xl:inline-flex">
+            <span className="h-1.5 w-1.5 rounded-full bg-[#73d4a5]" /> RESEARCH
+            / ENGINEERING
+          </span>
           <a
             href={cvUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="hidden rounded-md bg-primary px-3.5 py-2 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90 sm:inline-flex"
+            className="hidden border border-border px-3 py-2 font-mono text-[.65rem] tracking-wide transition-colors hover:border-accent hover:text-accent sm:inline-flex"
           >
             Download CV
           </a>
-          <ThemeToggle />
           <button
             type="button"
-            className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-border bg-card lg:hidden"
+            className="inline-flex h-9 w-9 items-center justify-center border border-border bg-card lg:hidden"
             aria-expanded={open}
             aria-label={open ? "Close menu" : "Open menu"}
             onClick={() => setOpen((v) => !v)}

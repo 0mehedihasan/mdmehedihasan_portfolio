@@ -8,13 +8,13 @@ export function PublicationsSection() {
     <Section
       id="publications"
       eyebrow="Publications"
-      title="Peer-reviewed work"
-      description="Conference and journal outputs, with review status stated explicitly."
+      title="Scholarly publications"
+      description="A compact record of published and under-review research outputs."
     >
       <ol className="grid gap-4">
         {publications.map((p) => (
           <li key={p.title}>
-            <article className="card-surface p-5 sm:p-6">
+            <article className="research-module border border-border bg-card p-5 sm:p-6">
               <div className="flex flex-wrap items-center gap-2">
                 <Tag tone={p.status === "Published" ? "accent" : "default"}>
                   {p.status}
@@ -25,7 +25,12 @@ export function PublicationsSection() {
                   </span>
                 ) : null}
               </div>
-              <h3 className="mt-3 text-xl leading-snug">{p.title}</h3>
+              <p className="mt-4 font-mono text-[.65rem] tracking-[.12em] text-muted-foreground">
+                {p.status === "Published"
+                  ? "CONFERENCE PAPER"
+                  : "JOURNAL ARTICLE"}
+              </p>
+              <h3 className="mt-2 text-xl leading-snug">{p.title}</h3>
               <p className="mt-2 text-sm text-muted-foreground">{p.authors}</p>
               <p className="mt-1 text-sm text-muted-foreground italic">
                 {p.venue}
@@ -60,20 +65,31 @@ export function ResearchProjectsSection() {
       id="projects"
       tone="surface"
       eyebrow="Research Projects"
-      title="Applied research work"
-      description="AI and machine learning projects, connected to their publications where applicable."
+      title="Research case studies"
+      description="Problem-led work across biomedical AI, medical imaging, and responsible model evaluation."
     >
       <div className="grid gap-5 lg:grid-cols-3">
         {researchProjects.map((p) => (
-          <article key={p.title} className="card-surface flex flex-col p-6">
+          <article
+            key={p.title}
+            className="card-surface flex flex-col p-6 transition-colors hover:border-accent/60"
+          >
+            <p className="font-mono text-[.64rem] tracking-[.12em] text-accent">
+              RESEARCH PROJECT
+            </p>
             <h3 className="text-xl leading-snug">{p.title}</h3>
             <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
               {p.summary}
             </p>
-            <div className="mt-4 flex flex-wrap gap-2">
-              {p.focus.map((f) => (
-                <Tag key={f}>{f}</Tag>
-              ))}
+            <div className="mt-4 border-t border-border pt-4">
+              <p className="font-mono text-[.62rem] tracking-[.12em] text-muted-foreground">
+                DOMAIN / METHOD
+              </p>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {p.focus.map((f) => (
+                  <Tag key={f}>{f}</Tag>
+                ))}
+              </div>
             </div>
             {p.linkedPublication ? (
               <p className="mt-4 rounded-md border-l-2 border-accent bg-highlight/40 px-3 py-2 text-xs leading-relaxed text-muted-foreground">

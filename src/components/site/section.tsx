@@ -23,13 +23,13 @@ export function Section({
     <section
       id={id}
       className={cn(
-        "scroll-mt-24 border-t border-border py-16 sm:py-20",
+        "section-frame scroll-mt-24 border-t border-border py-16 sm:py-24",
         tone === "surface" && "bg-surface",
         className,
       )}
     >
       <div className="container-page">
-        <header className="max-w-3xl">
+        <header className="max-w-3xl pl-5">
           {eyebrow ? <p className="eyebrow">{eyebrow}</p> : null}
           <h2 className="mt-2 text-3xl sm:text-4xl">{title}</h2>
           {description ? (

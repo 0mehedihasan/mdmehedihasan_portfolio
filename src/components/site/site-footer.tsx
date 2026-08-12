@@ -7,10 +7,10 @@ export function SiteFooter() {
     <footer className="border-t border-border bg-surface py-12">
       <div className="container-page grid gap-8 sm:grid-cols-2">
         <div>
-          <p className="font-serif text-lg">{person.name}</p>
+          <p className="font-mono text-sm tracking-[.12em]">MEHEDI HASAN</p>
           <p className="mt-2 max-w-md text-sm text-muted-foreground">
-            Research Assistant at AMIRL. Machine learning, explainable AI, and
-            healthcare AI research.
+            Researcher and Machine Learning Engineer. AI, explainability,
+            biomedical data, and technical systems.
           </p>
           <p className="mt-3 text-sm text-muted-foreground">
             <a className="link-underline" href={`mailto:${person.email}`}>

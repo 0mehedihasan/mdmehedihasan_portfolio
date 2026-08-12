@@ -52,6 +52,7 @@ export const adminStatus = createServerFn({ method: "GET" }).handler(
   async () => {
     const store = await import("./content-store.server");
     const gh = await import("./github.server");
+    await store.requireAdmin();
     const auth = await import("./auth.server");
     await store.requireAdmin();
     const settings = store.repoSettings();
@@ -114,6 +115,7 @@ export const getContent = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const store = await import("./content-store.server");
     try {
+      await store.requireAdmin();
       const doc = await store.readDoc(data.path);
       if (!doc)
         return {
@@ -136,9 +138,7 @@ export const saveContent = createServerFn({ method: "POST" })
       const commit = await store.saveDoc(data);
       return {
         ok: true as const,
-        message: commit.created
-          ? "Created and committed to GitHub."
-          : "Updated and committed to GitHub.",
+        message: `${commit.created ? "Created" : "Updated"} and committed to GitHub. Deployment status: Unknown.`,
         commit,
       };
     } catch (error) {

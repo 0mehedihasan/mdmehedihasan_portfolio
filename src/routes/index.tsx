@@ -10,6 +10,7 @@ import {
   ExperienceSection,
 } from "@/components/site/experience";
 import { Hero } from "@/components/site/hero";
+import { ResearchWorkbench } from "@/components/site/workbench";
 import { AwardsSection, SkillsSection } from "@/components/site/records";
 import {
   PublicationsSection,
@@ -45,6 +46,7 @@ function Index() {
       <Hero />
       <AboutSection />
       <ResearchInterestsSection />
+      <ResearchWorkbench />
       <ExperienceSection />
       <EducationSection />
       <PublicationsSection />

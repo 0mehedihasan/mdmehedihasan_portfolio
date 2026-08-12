@@ -77,8 +77,10 @@ export async function saveDoc(data: SaveInput) {
       date: data.date?.trim() || new Date().toISOString().slice(0, 10),
       tags: data.tags ?? [],
       summary: data.summary ?? "",
+      abstract: data.type === "research" ? (data.abstract ?? "") : "",
       image: data.image ?? "",
       draft: Boolean(data.draft),
+      extra: data.extra ?? {},
     },
     data.body,
   );

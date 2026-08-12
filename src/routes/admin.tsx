@@ -21,6 +21,7 @@ import {
   adminSession,
   adminStatus,
   deleteContent,
+  getContent,
   listContent,
   saveContent,
 } from "@/lib/content.functions";
@@ -42,6 +43,8 @@ type EditorState = {
   tags: string;
   image: string;
   summary: string;
+  abstract: string;
+  extra: Record<string, string>;
   draft: boolean;
   body: string;
   originalPath: string | null;
@@ -59,6 +62,8 @@ function blankDoc(type: ContentTypeId): EditorState {
     tags: "",
     image: "",
     summary: "",
+    abstract: "",
+    extra: {},
     draft: true,
     body: "",
     originalPath: null,
@@ -74,6 +79,8 @@ function mapDoc(doc: ContentDoc): EditorState {
     tags: doc.tags.join(", "),
     image: doc.image ?? "",
     summary: doc.summary ?? "",
+    abstract: doc.abstract ?? "",
+    extra: doc.extra ?? {},
     draft: Boolean(doc.draft),
     body: doc.body,
     originalPath: doc.path,
@@ -202,6 +209,9 @@ function AdminPage() {
           .filter(Boolean),
         image: draft.image.trim() || null,
         summary: draft.summary.trim() || null,
+        abstract:
+          draft.type === "research" ? draft.abstract.trim() || null : null,
+        extra: draft.extra,
         draft: draft.draft,
         body: draft.body,
         originalPath: draft.originalPath,
@@ -212,6 +222,14 @@ function AdminPage() {
           : result.message || "Could not save content.",
       );
       await load();
+      if (result.ok && result.commit) {
+        const refreshed = await getContent({
+          data: { path: result.commit.path },
+        });
+        if (refreshed.ok && refreshed.doc) {
+          setDraft(mapDoc({ ...refreshed.doc, type: draft.type }));
+        }
+      }
     } catch (error) {
       setActionMessage(
         error instanceof Error ? error.message : "Could not save content.",
@@ -226,9 +244,28 @@ function AdminPage() {
     window.location.assign("/login");
   }
 
-  function selectDoc(doc: ContentDoc) {
-    setDraft(mapDoc(doc));
+  async function selectDoc(doc: ContentDoc) {
+    setLoading(true);
+    setActionMessage("");
     setSelectedType(doc.type);
+    try {
+      const result = await getContent({ data: { path: doc.path } });
+      if (!result.ok || !result.doc) {
+        setActionMessage(
+          result.message || `Unable to load ${doc.path}. Please retry.`,
+        );
+        return;
+      }
+      setDraft(mapDoc({ ...result.doc, type: doc.type }));
+    } catch (error) {
+      setActionMessage(
+        error instanceof Error
+          ? `Unable to load ${doc.path}: ${error.message}`
+          : `Unable to load ${doc.path}. Please retry.`,
+      );
+    } finally {
+      setLoading(false);
+    }
   }
 
   function createNew(type: ContentTypeId = selectedType) {
@@ -348,7 +385,7 @@ function AdminPage() {
               <button
                 key={doc.path}
                 type="button"
-                onClick={() => selectDoc(doc)}
+                onClick={() => void selectDoc(doc)}
                 className={cn(
                   "card-surface block w-full rounded-lg px-4 py-3 text-left transition-colors hover:bg-surface",
                   draft.originalPath === doc.path
@@ -374,7 +411,7 @@ function AdminPage() {
         </aside>
 
         <div className="space-y-6">
-          <div className="grid gap-4 sm:grid-cols-3 xl:grid-cols-4">
+          <div className="grid gap-4 sm:grid-cols-3 xl:grid-cols-5">
             <div className="card-surface p-4">
               <p className="eyebrow">Selected path</p>
               <p className="mt-2 break-all text-sm">
@@ -384,7 +421,7 @@ function AdminPage() {
             <div className="card-surface p-4">
               <p className="eyebrow">Status</p>
               <p className="mt-2 text-sm">
-                {draft.draft ? "Draft" : "Published"}
+                {draft.draft ? "GitHub draft" : "GitHub published"}
               </p>
             </div>
             <div className="card-surface p-4">
@@ -394,6 +431,10 @@ function AdminPage() {
             <div className="card-surface p-4">
               <p className="eyebrow">Current type</p>
               <p className="mt-2 text-sm">{currentType.label}</p>
+            </div>
+            <div className="card-surface p-4">
+              <p className="eyebrow">Deployment</p>
+              <p className="mt-2 text-sm text-muted-foreground">Unknown</p>
             </div>
           </div>
 
@@ -505,6 +546,22 @@ function AdminPage() {
                 </label>
               </div>
 
+              {draft.type === "research" ? (
+                <label className="grid gap-1.5 text-sm">
+                  <span>Abstract</span>
+                  <Textarea
+                    value={draft.abstract}
+                    onChange={(e) =>
+                      setDraft((prev) => ({
+                        ...prev,
+                        abstract: e.target.value,
+                      }))
+                    }
+                    placeholder="Optional research abstract"
+                  />
+                </label>
+              ) : null}
+
               <div className="grid gap-4 sm:grid-cols-2">
                 <label className="grid gap-1.5 text-sm">
                   <span>Summary</span>
@@ -534,7 +591,7 @@ function AdminPage() {
                     setDraft((prev) => ({ ...prev, draft: e.target.checked }))
                   }
                 />
-                Save as draft
+                Save as GitHub draft (not yet deployed)
               </label>
 
               <div className="hidden md:block">
@@ -573,9 +630,17 @@ function AdminPage() {
                   </TabsContent>
                   <TabsContent value="preview" className="mt-4">
                     <div className="card-surface p-4">
+                      {draft.type === "research" && draft.abstract ? (
+                        <div className="mb-5 border-l-2 border-accent bg-surface p-4">
+                          <p className="eyebrow">Abstract</p>
+                          <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                            {draft.abstract}
+                          </p>
+                        </div>
+                      ) : null}
                       <Markdown>
                         {draft.body ||
-                          "## Live preview\n\nStart typing Markdown to see the rendered output."}
+                          "Start typing Markdown to see the rendered output."}
                       </Markdown>
                     </div>
                   </TabsContent>
@@ -602,12 +667,20 @@ function AdminPage() {
             </div>
 
             <div className="hidden md:block card-surface p-5">
-              <p className="eyebrow">Live Preview</p>
+              <p className="eyebrow">Live Preview · GitHub content</p>
               <h2 className="mt-1 text-xl">Rendered Markdown</h2>
               <div className="mt-4 rounded-lg border border-border bg-background p-5">
+                {draft.type === "research" && draft.abstract ? (
+                  <div className="mb-5 border-l-2 border-accent bg-surface p-4">
+                    <p className="eyebrow">Abstract</p>
+                    <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                      {draft.abstract}
+                    </p>
+                  </div>
+                ) : null}
                 <Markdown>
                   {draft.body ||
-                    "## Live preview\n\nStart typing Markdown to see the rendered output."}
+                    "Start typing Markdown to see the rendered output."}
                 </Markdown>
               </div>
             </div>

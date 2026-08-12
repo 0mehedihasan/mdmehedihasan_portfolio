@@ -202,7 +202,9 @@ export type Frontmatter = {
   tags: string[];
   image?: string | null;
   summary?: string | null;
+  abstract?: string | null;
   draft?: boolean;
+  extra?: Record<string, string>;
 };
 
 export type ContentDoc = Frontmatter & {
@@ -224,8 +226,12 @@ export function serializeDoc(fm: Frontmatter, body: string): string {
     `date: ${escapeYaml(fm.date)}`,
     `tags: [${fm.tags.map((t) => escapeYaml(t)).join(", ")}]`,
     `summary: ${escapeYaml(fm.summary ?? "")}`,
+    ...(fm.type === "research"
+      ? [`abstract: ${escapeYaml(fm.abstract ?? "")}`]
+      : []),
     `image: ${escapeYaml(fm.image ?? "")}`,
     `draft: ${fm.draft ? "true" : "false"}`,
+    ...Object.entries(fm.extra ?? {}).map(([key, value]) => `${key}: ${value}`),
     "---",
     "",
     body.trimEnd(),
@@ -254,10 +260,22 @@ export function parseDoc(
   const body = (match?.[2] ?? raw) || "";
   const fm: Record<string, string> = {};
   if (match) {
+    let activeListKey: string | null = null;
     for (const line of (match[1] ?? "").split(/\r?\n/)) {
+      const listItem = /^\s*-\s+(.+)$/.exec(line);
+      if (activeListKey && listItem) {
+        fm[activeListKey] = `${fm[activeListKey] ?? ""}${fm[activeListKey] ? "," : ""}${listItem[1]}`;
+        continue;
+      }
       const idx = line.indexOf(":");
-      if (idx === -1) continue;
-      fm[line.slice(0, idx).trim()] = line.slice(idx + 1).trim();
+      if (idx === -1) {
+        activeListKey = null;
+        continue;
+      }
+      const key = line.slice(0, idx).trim();
+      const value = line.slice(idx + 1).trim();
+      fm[key] = value;
+      activeListKey = key === "tags" && !value ? key : null;
     }
   }
   const tagsRaw = fm["tags"] ?? "";
@@ -268,17 +286,35 @@ export function parseDoc(
     .filter(Boolean);
   const fallbackSlug = path.split("/").pop()?.replace(/\.md$/, "") ?? "";
   const inferredType = typeId ?? inferTypeIdFromPath(path) ?? "article";
+  const type =
+    (unquote(fm["type"] ?? inferredType) as ContentTypeId) || inferredType;
+  const known = new Set([
+    "title",
+    "slug",
+    "type",
+    "date",
+    "tags",
+    "summary",
+    "abstract",
+    "image",
+    "draft",
+  ]);
+  const extra = Object.fromEntries(
+    Object.entries(fm).filter(([key]) => !known.has(key)),
+  );
   return {
     title: unquote(fm["title"] ?? fallbackSlug),
     slug: unquote(fm["slug"] ?? fallbackSlug),
-    type:
-      (unquote(fm["type"] ?? inferredType) as ContentTypeId) || inferredType,
+    type,
     date: unquote(fm["date"] ?? ""),
     tags,
     summary: unquote(fm["summary"] ?? "") || null,
+    abstract:
+      type === "research" ? unquote(fm["abstract"] ?? "") || null : null,
     image: unquote(fm["image"] ?? "") || null,
     draft: unquote(fm["draft"] ?? "false") === "true",
     body: body.replace(/^\n+/, ""),
     path,
+    extra,
   };
 }

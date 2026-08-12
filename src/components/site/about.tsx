@@ -11,8 +11,8 @@ export function AboutSection() {
     <Section
       id="about"
       eyebrow="About"
-      title="Research-driven, data-focused, and teaching-shaped"
-      description="A concise professional profile assembled from my academic CV."
+      title="A research and engineering trajectory"
+      description="Academic training, current research direction, and technical interests."
     >
       <div className="grid gap-10 lg:grid-cols-[1.4fr_1fr]">
         <div className="space-y-4 text-base leading-relaxed text-muted-foreground">
@@ -55,13 +55,19 @@ export function ResearchInterestsSection() {
       id="research-interests"
       tone="surface"
       eyebrow="Research Interests"
-      title="Where my work is focused"
-      description="Areas I actively work in and want to pursue at MSc/PhD level."
+      title="Research domains"
+      description="Areas of active work and long-term research direction."
     >
       <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {researchInterests.map((r) => (
-          <li key={r.title} className="card-surface p-5">
-            <h3 className="text-base font-medium">{r.title}</h3>
+          <li
+            key={r.title}
+            className="research-module border border-border bg-card p-5"
+          >
+            <p className="font-mono text-[.61rem] tracking-[.12em] text-accent">
+              DOMAIN
+            </p>
+            <h3 className="mt-2 text-base font-medium">{r.title}</h3>
             <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
               {r.detail}
             </p>

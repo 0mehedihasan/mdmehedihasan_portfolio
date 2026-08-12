@@ -14,6 +14,8 @@ export const saveSchema = z.object({
   tags: z.array(z.string().trim().max(40)).max(20).optional(),
   image: z.string().trim().max(500).optional().nullable(),
   summary: z.string().trim().max(400).optional().nullable(),
+  abstract: z.string().trim().max(2_000).optional().nullable(),
+  extra: z.record(z.string().max(120), z.string().max(4_000)).optional(),
   draft: z.boolean().optional(),
   body: z.string().max(400_000),
   originalPath: z.string().max(300).optional().nullable(),

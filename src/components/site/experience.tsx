@@ -8,8 +8,8 @@ export function ExperienceSection() {
     <Section
       id="experience"
       eyebrow="Experience"
-      title="Research & teaching timeline"
-      description="Research and teaching roles held at AMIRL and BUBT."
+      title="Research and teaching timeline"
+      description="Roles connecting academic inquiry, experimental work, and computer science education."
     >
       <ol className="relative space-y-6 border-l border-border pl-6 sm:pl-8">
         {experience.map((item) => (
@@ -18,7 +18,7 @@ export function ExperienceSection() {
               aria-hidden="true"
               className="absolute top-6 -left-[1.72rem] h-2.5 w-2.5 rounded-full border-2 border-background bg-accent sm:-left-[2.22rem]"
             />
-            <article className="card-surface p-5 sm:p-6">
+            <article className="research-module border border-border bg-card p-5 sm:p-6">
               <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
                 <h3 className="text-xl">{item.role}</h3>
                 <p className="font-mono text-xs tracking-wide text-muted-foreground">
