@@ -177,6 +177,17 @@ function AdminPage() {
     [content],
   );
 
+  const unknownDocs = useMemo(() => {
+    const term = filter.trim().toLowerCase();
+    return content.filter((item) => {
+      if (item.type !== "unknown") return false;
+      return (
+        !term ||
+        `${item.title} ${item.path} ${item.body}`.toLowerCase().includes(term)
+      );
+    });
+  }, [content, filter]);
+
   const currentType = typeById(draft.type);
   const currentPath =
     draft.originalPath ??
@@ -420,6 +431,30 @@ function AdminPage() {
                     {doc.draft ? "Draft" : "Published"}
                   </span>
                 </div>
+                <p className="mt-2 text-xs text-muted-foreground">{doc.path}</p>
+              </button>
+            ))}
+            {unknownDocs.length ? (
+              <p className="pt-3 text-xs font-medium uppercase tracking-[0.14em] text-muted-foreground">
+                Unclassified files
+              </p>
+            ) : null}
+            {unknownDocs.map((doc) => (
+              <button
+                key={doc.path}
+                type="button"
+                onClick={() => void selectDoc(doc)}
+                className={cn(
+                  "card-surface block w-full rounded-lg px-4 py-3 text-left transition-colors hover:bg-surface",
+                  draft.originalPath === doc.path
+                    ? "border-accent/40 ring-1 ring-accent/20"
+                    : "",
+                )}
+              >
+                <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
+                  Unknown
+                </p>
+                <h3 className="mt-1 text-sm font-medium">{doc.title}</h3>
                 <p className="mt-2 text-xs text-muted-foreground">{doc.path}</p>
               </button>
             ))}
@@ -682,7 +717,8 @@ function AdminPage() {
           <DialogHeader>
             <DialogTitle>Delete content?</DialogTitle>
             <DialogDescription>
-              This will permanently delete{" "}
+              This will permanently delete the exact GitHub file{" "}
+              <code className="break-all">{deleteTarget?.path ?? ""}</code> for{" "}
               {deleteTarget?.title ?? "the selected item"} from GitHub.
             </DialogDescription>
           </DialogHeader>

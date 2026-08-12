@@ -457,9 +457,22 @@ export function slugify(input: string): string {
 
 const aliases: Record<string, ContentTypeId> = {
   "research-project": "project",
+  "research-projects": "project",
   "technical-skills": "skills",
+  "technical-skill": "skills",
   memberships: "membership",
   "professional-activity": "activity",
+  "professional-activities": "activity",
+  professionalactivity: "activity",
+  activities: "activity",
+  extracurricular: "activity",
+  "extracurricular-activity": "activity",
+  "extracurricular-activities": "activity",
+  conferences: "conference",
+  certifications: "certification",
+  awards: "award",
+  publications: "publication",
+  datasets: "dataset",
 };
 function normalType(value: unknown): ContentTypeId | undefined {
   const id = String(value ?? "")
@@ -470,14 +483,29 @@ function normalType(value: unknown): ContentTypeId | undefined {
 }
 
 export function inferTypeIdFromPath(path: string): ContentTypeId | undefined {
-  const normal = path.replace(/^\/+/, "");
+  const normal = path.replace(/^\/+/, "").replace(/\\/g, "/");
   const exact = CONTENT_TYPES.find(
     (type) => type.kind === "file" && type.path === normal,
   );
   if (exact) return exact.id;
-  return CONTENT_TYPES.find(
+  const collection = CONTENT_TYPES.find(
     (type) => type.kind === "collection" && normal.startsWith(`${type.path}/`),
-  )?.id;
+  );
+  if (collection) return collection.id;
+
+  // Repositories that predate the CMS use a few established directory names.
+  // This is path-based detection only; unknown files remain unknown.
+  const directory = normal
+    .split("/")[1]
+    ?.toLowerCase()
+    .replace(/[_\s]+/g, "-");
+  if (directory && normalType(directory)) return normalType(directory);
+  const filename = normal
+    .split("/")
+    .pop()
+    ?.replace(/\.md$/i, "")
+    .replace(/[_\s]+/g, "-");
+  return filename ? normalType(filename) : undefined;
 }
 
 function scalar(value: FrontmatterValue | undefined): string {
@@ -584,6 +612,7 @@ export function serializeDoc(
   rawFrontmatter: string | null,
 ): string {
   const values = new Map(Object.entries(frontmatter));
+  const original = rawFrontmatter ? parseFrontmatter(rawFrontmatter) : {};
   const emitted = new Set<string>();
   const lines: string[] = [];
   if (rawFrontmatter) {
@@ -599,6 +628,10 @@ export function serializeDoc(
       const next = values.get(key);
       emitted.add(key);
       if (next === undefined) continue;
+      if (sameValue(next, original[key])) {
+        lines.push(line);
+        continue;
+      }
       lines.push(`${key}: ${yamlValue(next)}`);
       if (Array.isArray(next))
         while (/^\s+-\s+/.test(source[index + 1] ?? "")) index += 1;
@@ -612,4 +645,22 @@ export function serializeDoc(
     )
       lines.push(`${key}: ${yamlValue(value)}`);
   return ["---", ...lines, "---", "", body.replace(/\s+$/, ""), ""].join("\n");
+}
+
+function parseFrontmatter(rawFrontmatter: string): Frontmatter {
+  return parseDoc(`---\n${rawFrontmatter}\n---\n`).frontmatter;
+}
+
+function sameValue(
+  left: FrontmatterValue | undefined,
+  right: FrontmatterValue | undefined,
+): boolean {
+  if (Array.isArray(left) || Array.isArray(right))
+    return (
+      Array.isArray(left) &&
+      Array.isArray(right) &&
+      left.length === right.length &&
+      left.every((value, index) => value === right[index])
+    );
+  return left === right;
 }

@@ -91,6 +91,15 @@ export const listContent = createServerFn({ method: "GET" }).handler(
   async () => {
     const store = await import("./content-store.server");
     const gh = await import("./github.server");
+    try {
+      await store.requireAdmin();
+    } catch (error) {
+      return {
+        ok: false as const,
+        items: [] as ContentDoc[],
+        message: store.toMessage(error),
+      };
+    }
     if (!gh.isGitHubConfigured()) {
       return {
         ok: false as const,

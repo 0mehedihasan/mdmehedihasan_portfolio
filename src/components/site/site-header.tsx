@@ -8,6 +8,7 @@ const nav = [
   { label: "Research", to: "/research", hash: undefined },
   { label: "Projects", to: "/projects", hash: undefined },
   { label: "Publications", to: "/publications", hash: undefined },
+  { label: "Activities", to: "/activities", hash: undefined },
   { label: "Experience", to: "/", hash: "experience" as string | undefined },
   { label: "Engineering", to: "/", hash: "engineering" as string | undefined },
   { label: "Writing", to: "/notes", hash: undefined },

@@ -28,15 +28,13 @@ export function toMessage(error: unknown): string {
 export async function loadAll(): Promise<ContentDoc[]> {
   const cfg = gh.getRepoConfig();
   const files = await gh.listMarkdownFiles(cfg);
-  const results = (
-    await Promise.all(
-      files.map(async (file) => {
-        const found = await gh.readFile(cfg, file.path);
-        return found
-          ? { ...parseDoc(found.content, file.path), sha: found.sha }
-          : null;
-      }),
-    )
+  const results = await Promise.all(
+    files.map(async (file) => {
+      const found = await gh.readFile(cfg, file.path);
+      return found
+        ? { ...parseDoc(found.content, file.path), sha: found.sha }
+        : null;
+    }),
   );
   const docs: ContentDoc[] = results.filter((doc) => doc !== null);
   return docs.sort((a, b) => (b.date ?? "").localeCompare(a.date ?? ""));
@@ -73,13 +71,17 @@ export async function saveDoc(data: SaveInput) {
   const existing = data.originalPath
     ? await gh.readFile(cfg, data.originalPath)
     : null;
+  if (data.originalPath && !existing)
+    throw new Error(
+      "The original GitHub file no longer exists. Reload content before saving so it is not recreated accidentally.",
+    );
   const original = existing
     ? parseDoc(existing.content, data.originalPath ?? "")
     : null;
   const frontmatter = {
     ...(original?.frontmatter ?? {}),
     ...data.frontmatter,
-    type: type.id,
+    ...(original ? {} : { type: type.id }),
     ...(type.kind === "collection" ? { slug } : {}),
   };
   const markdown = serializeDoc(
