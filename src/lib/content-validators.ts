@@ -22,6 +22,10 @@ export const saveSchema = z.object({
 });
 
 export const pathSchema = z.object({ path: z.string().min(3).max(300) });
+export const revisionSchema = pathSchema.extend({
+  ref: z.string().min(7).max(80),
+});
+export const commitSchema = z.object({ sha: z.string().min(7).max(80) });
 
 export type SaveInput = z.infer<typeof saveSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;

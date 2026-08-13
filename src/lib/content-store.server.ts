@@ -111,6 +111,69 @@ export async function deleteDoc(path: string) {
   return gh.deleteFile(cfg, path, `content: delete ${path}`);
 }
 
+/** Saves a GitHub-backed draft or a publishable version without changing paths. */
+export async function saveDocWithStatus(data: SaveInput, publish: boolean) {
+  return saveDoc({
+    ...data,
+    frontmatter: { ...data.frontmatter, draft: !publish },
+  });
+}
+
+export async function historyFor(path: string) {
+  return gh.listFileCommits(gh.getRepoConfig(), path);
+}
+
+export async function revisionFor(path: string, ref: string) {
+  const found = await gh.readFileAtRef(gh.getRepoConfig(), path, ref);
+  return found ? { ...parseDoc(found.content, path), sha: found.sha } : null;
+}
+
+/** Finds the latest version that was not marked as a GitHub draft. */
+export async function latestPublishedFor(path: string) {
+  for (const commit of await historyFor(path)) {
+    const doc = await revisionFor(path, commit.sha);
+    if (doc && !doc.draft) return { doc, commit };
+  }
+  return null;
+}
+
+export async function deploymentFor(sha: string) {
+  return gh.getDeploymentInfo(gh.getRepoConfig(), sha);
+}
+
+export async function publishedBaseUrl() {
+  const info = await gh.repoInfo(gh.getRepoConfig());
+  return info.homepage?.replace(/\/$/, "") || null;
+}
+
+export async function publishedUrlFor(doc: ContentDoc) {
+  const base = await publishedBaseUrl();
+  if (!base) return null;
+  const routes: Partial<Record<ContentDoc["type"], string>> = {
+    research: "/research",
+    project: "/projects",
+    publication: "/publications",
+    article: "/notes",
+    tutorial: "/notes",
+    dataset: "/research",
+    conference: "/activities",
+    certification: "/activities",
+    award: "/activities",
+    activity: "/activities",
+    experience: "/#experience",
+    education: "/#education",
+    skills: "/#skills",
+    membership: "/activities#memberships",
+    profile: "/",
+    about: "/#about",
+    "research-interests": "/#research-interests",
+    cv: "/",
+    settings: "/",
+  };
+  const route = routes[doc.type];
+  return route ? `${base}${route}` : null;
+}
+
 export function repoSettings() {
   return {
     owner: process.env["GITHUB_OWNER"] ?? "0mehedihasan",

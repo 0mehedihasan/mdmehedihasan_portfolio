@@ -197,6 +197,100 @@ export type CommitResult = {
   created: boolean;
 };
 
+export type CommitHistoryEntry = {
+  sha: string;
+  url: string;
+  message: string;
+  date: string;
+};
+
+export type DeploymentState =
+  | "pending"
+  | "building"
+  | "ready"
+  | "failed"
+  | "unavailable";
+
+export type DeploymentInfo = {
+  state: DeploymentState;
+  url: string | null;
+  description: string;
+};
+
+export async function readFileAtRef(
+  cfg: RepoConfig,
+  path: string,
+  ref: string,
+): Promise<{ content: string; sha: string } | null> {
+  try {
+    const data = await gh<{ content: string; sha: string }>(
+      cfg,
+      `/repos/${cfg.owner}/${cfg.repo}/contents/${encodePath(path)}?ref=${encodeURIComponent(ref)}`,
+    );
+    return { content: b64decode(data.content ?? ""), sha: data.sha };
+  } catch (error) {
+    if (error instanceof GitHubError && error.status === 404) return null;
+    throw error;
+  }
+}
+
+export async function listFileCommits(
+  cfg: RepoConfig,
+  path: string,
+): Promise<CommitHistoryEntry[]> {
+  const data = await gh<
+    Array<{
+      sha: string;
+      html_url: string;
+      commit: { message: string; author: { date: string } | null };
+    }>
+  >(
+    cfg,
+    `/repos/${cfg.owner}/${cfg.repo}/commits?path=${encodeURIComponent(path)}&sha=${encodeURIComponent(cfg.branch)}&per_page=20`,
+  );
+  return data.map((entry) => ({
+    sha: entry.sha,
+    url: entry.html_url,
+    message: entry.commit.message,
+    date: entry.commit.author?.date ?? "",
+  }));
+}
+
+export async function getDeploymentInfo(
+  cfg: RepoConfig,
+  sha: string,
+): Promise<DeploymentInfo> {
+  const data = await gh<{
+    statuses: Array<{ context: string; state: string; target_url: string | null }>;
+  }>(cfg, `/repos/${cfg.owner}/${cfg.repo}/commits/${encodeURIComponent(sha)}/status`);
+  const deployment = data.statuses.find((status) =>
+    /vercel|deploy/i.test(status.context),
+  );
+  if (!deployment)
+    return {
+      state: "unavailable",
+      url: null,
+      description: "No Vercel deployment status has been reported to GitHub yet.",
+    };
+  if (deployment.state === "success")
+    return {
+      state: "ready",
+      url: deployment.target_url,
+      description: "Production ready",
+    };
+  if (deployment.state === "failure" || deployment.state === "error")
+    return {
+      state: "failed",
+      url: deployment.target_url,
+      description: "Deployment failed",
+    };
+  return {
+    state: /build/i.test(deployment.context) ? "building" : "pending",
+    url: deployment.target_url,
+    description: "Vercel is processing this commit.",
+  };
+}
+
 export async function writeFile(
   cfg: RepoConfig,
   path: string,
@@ -253,6 +347,7 @@ export async function repoInfo(cfg: RepoConfig) {
   const data = await gh<{
     full_name: string;
     html_url: string;
+    homepage: string | null;
     private: boolean;
     default_branch: string;
   }>(cfg, `/repos/${cfg.owner}/${cfg.repo}`);

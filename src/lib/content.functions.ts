@@ -5,7 +5,13 @@ import {
 } from "@tanstack/react-start/server";
 
 import type { ContentDoc } from "./content-schema";
-import { loginSchema, pathSchema, saveSchema } from "./content-validators";
+import {
+  commitSchema,
+  loginSchema,
+  pathSchema,
+  revisionSchema,
+  saveSchema,
+} from "./content-validators";
 
 export const adminLogin = createServerFn({ method: "POST" })
   .validator((d: unknown) => loginSchema.parse(d))
@@ -156,6 +162,105 @@ export const saveContent = createServerFn({ method: "POST" })
         message: store.toMessage(error),
         commit: null,
       };
+    }
+  });
+
+/** Explicit draft action; this never changes the public version. */
+export const saveDraftContent = createServerFn({ method: "POST" })
+  .validator((d: unknown) => saveSchema.parse(d))
+  .handler(async ({ data }) => {
+    const store = await import("./content-store.server");
+    try {
+      await store.requireAdmin();
+      const commit = await store.saveDocWithStatus(data, false);
+      return {
+        ok: true as const,
+        message: "Draft saved to GitHub. It is excluded from published content.",
+        commit,
+      };
+    } catch (error) {
+      return { ok: false as const, message: store.toMessage(error), commit: null };
+    }
+  });
+
+/** Explicit publish action. The caller must choose it intentionally. */
+export const publishContent = createServerFn({ method: "POST" })
+  .validator((d: unknown) => saveSchema.parse(d))
+  .handler(async ({ data }) => {
+    const store = await import("./content-store.server");
+    try {
+      await store.requireAdmin();
+      const commit = await store.saveDocWithStatus(data, true);
+      const doc = await store.readDoc(commit.path);
+      return {
+        ok: true as const,
+        message: `${commit.created ? "Created" : "Updated"} and published to GitHub.`,
+        commit,
+        deployment: await store.deploymentFor(commit.sha),
+        publishedUrl: doc ? await store.publishedUrlFor(doc) : null,
+      };
+    } catch (error) {
+      return {
+        ok: false as const,
+        message: store.toMessage(error),
+        commit: null,
+        deployment: null,
+        publishedUrl: null,
+      };
+    }
+  });
+
+export const contentHistory = createServerFn({ method: "POST" })
+  .validator((d: unknown) => pathSchema.parse(d))
+  .handler(async ({ data }) => {
+    const store = await import("./content-store.server");
+    try {
+      await store.requireAdmin();
+      return { ok: true as const, entries: await store.historyFor(data.path), message: "" };
+    } catch (error) {
+      return { ok: false as const, entries: [], message: store.toMessage(error) };
+    }
+  });
+
+export const contentRevision = createServerFn({ method: "POST" })
+  .validator((d: unknown) => revisionSchema.parse(d))
+  .handler(async ({ data }) => {
+    const store = await import("./content-store.server");
+    try {
+      await store.requireAdmin();
+      return { ok: true as const, doc: await store.revisionFor(data.path, data.ref), message: "" };
+    } catch (error) {
+      return { ok: false as const, doc: null, message: store.toMessage(error) };
+    }
+  });
+
+export const publishedContent = createServerFn({ method: "POST" })
+  .validator((d: unknown) => pathSchema.parse(d))
+  .handler(async ({ data }) => {
+    const store = await import("./content-store.server");
+    try {
+      await store.requireAdmin();
+      const published = await store.latestPublishedFor(data.path);
+      return {
+        ok: true as const,
+        published,
+        publishedUrl: published ? await store.publishedUrlFor(published.doc) : null,
+        message: "",
+      };
+    } catch (error) {
+      return { ok: false as const, published: null, publishedUrl: null, message: store.toMessage(error) };
+    }
+  });
+
+export const deploymentStatus = createServerFn({ method: "POST" })
+  .validator((d: unknown) => commitSchema.parse(d))
+  .handler(async ({ data }) => {
+    const store = await import("./content-store.server");
+    try {
+      await store.requireAdmin();
+      return { ok: true as const, deployment: await store.deploymentFor(data.sha), message: "" };
+    } catch (error) {
+      return { ok: false as const, deployment: null, message: store.toMessage(error) };
     }
   });
 

@@ -20,10 +20,14 @@ import {
   adminLogout,
   adminSession,
   adminStatus,
+  contentHistory,
   deleteContent,
+  deploymentStatus,
   getContent,
   listContent,
-  saveContent,
+  publishContent,
+  publishedContent,
+  saveDraftContent,
 } from "@/lib/content.functions";
 import {
   CONTENT_TYPES,
@@ -46,6 +50,26 @@ type EditorState = {
   body: string;
   originalPath: string | null;
 };
+
+type PublishResult = {
+  sha: string;
+  commitUrl: string;
+  publishedUrl: string | null;
+  deployment: { state: string; url: string | null; description: string };
+};
+
+function lineDiff(previous: string, current: string) {
+  const before = previous.split("\n");
+  const after = current.split("\n");
+  return Array.from({ length: Math.max(before.length, after.length) }, (_, index) => {
+    const oldLine = before[index];
+    const newLine = after[index];
+    return oldLine === newLine ? null : { oldLine, newLine, index };
+  }).filter(
+    (change): change is { oldLine?: string; newLine?: string; index: number } =>
+      Boolean(change),
+  );
+}
 
 function blankDoc(type: ContentTypeId): EditorState {
   const kind = typeById(type);
@@ -121,6 +145,12 @@ function AdminPage() {
   const [draft, setDraft] = useState<EditorState>(blankDoc("profile"));
   const [deleteTarget, setDeleteTarget] = useState<ContentDoc | null>(null);
   const [actionMessage, setActionMessage] = useState<string>("");
+  const [publishResult, setPublishResult] = useState<PublishResult | null>(null);
+  const [history, setHistory] = useState<
+    Array<{ sha: string; url: string; message: string; date: string }>
+  >([]);
+  const [publishedUrl, setPublishedUrl] = useState<string | null>(null);
+  const [publishedBody, setPublishedBody] = useState<string | null>(null);
 
   const load = async () => {
     setLoading(true);
@@ -154,6 +184,25 @@ function AdminPage() {
     void load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    if (
+      !publishResult ||
+      ["ready", "failed", "unavailable"].includes(publishResult.deployment.state)
+    )
+      return;
+    const timer = window.setInterval(() => {
+      void deploymentStatus({ data: { sha: publishResult.sha } }).then((result) => {
+        if (result.ok && result.deployment)
+          setPublishResult((previous) =>
+            previous
+              ? { ...previous, deployment: result.deployment }
+              : previous,
+          );
+      });
+    }, 10_000);
+    return () => window.clearInterval(timer);
+  }, [publishResult]);
 
   const filtered = useMemo(() => {
     const term = filter.trim().toLowerCase();
@@ -189,6 +238,10 @@ function AdminPage() {
   }, [content, filter]);
 
   const currentType = typeById(draft.type);
+  const changes = useMemo(
+    () => (publishedBody === null ? [] : lineDiff(publishedBody, draft.body)),
+    [draft.body, publishedBody],
+  );
   const currentPath =
     draft.originalPath ??
     (currentType
@@ -203,8 +256,7 @@ function AdminPage() {
         )
       : "");
 
-  async function onSave(e: FormEvent<HTMLFormElement>) {
-    e.preventDefault();
+  async function persist(publish = false) {
     setSaving(true);
     setActionMessage("");
     try {
@@ -212,7 +264,7 @@ function AdminPage() {
         throw new Error(
           "Unknown content types are read-only. Add explicit content_type metadata before editing.",
         );
-      const result = await saveContent({
+      const data = {
         data: {
           type: currentType.id,
           slug: draft.slug,
@@ -220,7 +272,10 @@ function AdminPage() {
           body: draft.body,
           originalPath: draft.originalPath,
         },
-      });
+      };
+      const result = publish
+        ? await publishContent(data)
+        : await saveDraftContent(data);
       setActionMessage(
         result.ok
           ? result.message
@@ -228,6 +283,15 @@ function AdminPage() {
       );
       await load();
       if (result.ok && result.commit) {
+        if (publish && "deployment" in result && result.deployment) {
+          setPublishResult({
+            sha: result.commit.sha,
+            commitUrl: result.commit.url,
+            publishedUrl: result.publishedUrl,
+            deployment: result.deployment,
+          });
+          setPublishedUrl(result.publishedUrl);
+        }
         const refreshed = await getContent({
           data: { path: result.commit.path },
         });
@@ -242,6 +306,11 @@ function AdminPage() {
     } finally {
       setSaving(false);
     }
+  }
+
+  function onSave(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    void persist(false);
   }
 
   async function onLogout() {
@@ -262,6 +331,14 @@ function AdminPage() {
         return;
       }
       setDraft(mapDoc(result.doc));
+      const [published, changes] = await Promise.all([
+        publishedContent({ data: { path: doc.path } }),
+        contentHistory({ data: { path: doc.path } }),
+      ]);
+      setPublishedUrl(published.ok ? published.publishedUrl : null);
+      setPublishedBody(published.ok ? published.published?.doc.body ?? null : null);
+      setHistory(changes.ok ? changes.entries : []);
+      setPublishResult(null);
     } catch (error) {
       setActionMessage(
         error instanceof Error
@@ -473,7 +550,9 @@ function AdminPage() {
               <p className="eyebrow">Status</p>
               <p className="mt-2 text-sm">
                 {draftValue(draft.frontmatter)
-                  ? "GitHub draft"
+                  ? publishedUrl
+                    ? "Published + unpublished changes"
+                    : "GitHub draft"
                   : "GitHub published"}
               </p>
             </div>
@@ -499,6 +578,26 @@ function AdminPage() {
             <p className="rounded-md border border-border bg-surface px-4 py-3 text-sm">
               {actionMessage}
             </p>
+          ) : null}
+
+          {publishResult ? (
+            <div className="card-surface space-y-3 border-accent/40 p-5">
+              <div>
+                <p className="eyebrow text-accent">
+                  {publishResult.deployment.state === "ready"
+                    ? "Published successfully"
+                    : "GitHub publish committed"}
+                </p>
+                <p className="mt-1 text-sm">
+                  Commit <code>{publishResult.sha.slice(0, 7)}</code> · Deployment {publishResult.deployment.state}
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-3 text-sm">
+                <a className="text-accent link-underline" href={publishResult.commitUrl} target="_blank" rel="noreferrer">View GitHub commit</a>
+                {publishResult.deployment.state === "ready" && publishResult.publishedUrl ? <a className="text-accent link-underline" href={publishResult.publishedUrl} target="_blank" rel="noreferrer">Open published page</a> : null}
+                {publishResult.deployment.url ? <a className="text-accent link-underline" href={publishResult.deployment.url} target="_blank" rel="noreferrer">View deployment</a> : null}
+              </div>
+            </div>
           ) : null}
 
           <form
@@ -678,12 +777,15 @@ function AdminPage() {
 
               <div className="flex flex-wrap gap-3 pt-2">
                 <Button type="submit" disabled={saving}>
-                  <FilePenLine className="h-4 w-4" />{" "}
-                  {saving
-                    ? "Publishing…"
-                    : draft.originalPath
-                      ? "Update and publish"
-                      : "Publish"}
+                  <FilePenLine className="h-4 w-4" /> {saving ? "Saving…" : "Save draft"}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={saving || !currentType}
+                  onClick={() => void persist(true)}
+                >
+                  <FilePenLine className="h-4 w-4" /> Publish
                 </Button>
                 <Button
                   type="button"
@@ -703,6 +805,47 @@ function AdminPage() {
                   {draft.body ||
                     "Start typing Markdown to see the rendered output."}
                 </Markdown>
+              </div>
+              <div className="mt-6 border-t border-border pt-4">
+                <p className="eyebrow">Change history</p>
+                <div className="mt-2 flex flex-wrap gap-3 text-sm">
+                  {publishedUrl ? (
+                    <a className="text-accent link-underline" href={publishedUrl} target="_blank" rel="noreferrer">View published</a>
+                  ) : (
+                    <span className="text-muted-foreground">No published URL detected.</span>
+                  )}
+                  {history[0] ? (
+                    <a className="text-accent link-underline" href={history[0].url} target="_blank" rel="noreferrer">View changes on GitHub</a>
+                  ) : null}
+                </div>
+                {history.length ? (
+                  <ol className="mt-4 space-y-2 text-xs text-muted-foreground">
+                    {history.slice(0, 5).map((entry) => (
+                      <li key={entry.sha} className="flex flex-wrap gap-x-2">
+                        <time>{entry.date ? new Date(entry.date).toLocaleString() : "Unknown date"}</time>
+                        <a className="text-accent link-underline" href={entry.url} target="_blank" rel="noreferrer">{entry.sha.slice(0, 7)}</a>
+                        <span>{entry.message}</span>
+                      </li>
+                    ))}
+                  </ol>
+                ) : null}
+                {changes.length ? (
+                  <div className="mt-5">
+                    <p className="eyebrow">Draft changes</p>
+                    <div className="mt-2 max-h-56 overflow-auto rounded-md border border-border bg-background p-3 font-mono text-xs">
+                      {changes.slice(0, 80).map((change) => (
+                        <div key={change.index}>
+                          {change.oldLine !== undefined ? (
+                            <p className="text-red-400">- {change.oldLine}</p>
+                          ) : null}
+                          {change.newLine !== undefined ? (
+                            <p className="text-[#73d4a5]">+ {change.newLine}</p>
+                          ) : null}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
               </div>
             </div>
           </form>
