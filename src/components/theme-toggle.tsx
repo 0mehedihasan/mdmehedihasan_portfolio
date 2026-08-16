@@ -26,25 +26,35 @@ export function ThemeToggle() {
     return () => mq.removeEventListener("change", onChange);
   }, []);
 
-  const cycle = () => {
-    const next: Mode =
-      mode === "light" ? "dark" : mode === "dark" ? "system" : "light";
+  const choose = (next: Mode) => {
     setMode(next);
     localStorage.setItem(KEY, next);
     apply(next);
   };
 
-  const Icon = mode === "light" ? Sun : mode === "dark" ? Moon : Monitor;
-
   return (
-    <button
-      type="button"
-      onClick={cycle}
-      aria-label={`Theme: ${mode}. Click to change theme.`}
-      title={`Theme: ${mode}`}
-      className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-border bg-card text-muted-foreground transition-colors hover:text-foreground"
+    <div
+      className="inline-flex rounded-md border border-border bg-card p-0.5"
+      role="group"
+      aria-label="Color theme"
     >
-      <Icon className="h-4 w-4" aria-hidden="true" />
-    </button>
+      {[
+        { value: "light" as const, label: "Light", Icon: Sun },
+        { value: "dark" as const, label: "Dark", Icon: Moon },
+        { value: "system" as const, label: "System", Icon: Monitor },
+      ].map(({ value, label, Icon }) => (
+        <button
+          key={value}
+          type="button"
+          onClick={() => choose(value)}
+          aria-pressed={mode === value}
+          aria-label={`${label} theme`}
+          title={`${label} theme`}
+          className={`inline-flex h-7 w-7 items-center justify-center rounded text-muted-foreground transition-colors hover:text-foreground ${mode === value ? "bg-highlight text-accent" : ""}`}
+        >
+          <Icon className="h-3.5 w-3.5" aria-hidden="true" />
+        </button>
+      ))}
+    </div>
   );
 }

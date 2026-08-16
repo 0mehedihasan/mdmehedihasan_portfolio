@@ -3,6 +3,7 @@ import { Menu, X } from "lucide-react";
 import { useState } from "react";
 
 import { cvUrl, person } from "@/content/cv";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 const nav = [
   { label: "Research", to: "/research", hash: undefined },
@@ -61,6 +62,7 @@ export function SiteHeader() {
           >
             Download CV
           </a>
+          <ThemeToggle />
           <button
             type="button"
             className="inline-flex h-9 w-9 items-center justify-center border border-border bg-card lg:hidden"
