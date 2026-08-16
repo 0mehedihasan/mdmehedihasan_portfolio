@@ -61,14 +61,23 @@ type PublishResult = {
 function lineDiff(previous: string, current: string) {
   const before = previous.split("\n");
   const after = current.split("\n");
-  return Array.from({ length: Math.max(before.length, after.length) }, (_, index) => {
-    const oldLine = before[index];
-    const newLine = after[index];
-    return oldLine === newLine ? null : { oldLine, newLine, index };
-  }).filter(
+  return Array.from(
+    { length: Math.max(before.length, after.length) },
+    (_, index) => {
+      const oldLine = before[index];
+      const newLine = after[index];
+      return oldLine === newLine ? null : { oldLine, newLine, index };
+    },
+  ).filter(
     (change): change is { oldLine?: string; newLine?: string; index: number } =>
       Boolean(change),
   );
+}
+
+function starterBody(type: ContentTypeId): string {
+  if (type === "article" || type === "tutorial")
+    return "# Introduction\n\nStart writing here. You can use **bold text**, headings, lists, links, images, and code blocks.\n\n## Key points\n\n- First point\n- Second point\n\n## Conclusion\n\nAdd your closing thoughts.";
+  return "";
 }
 
 function blankDoc(type: ContentTypeId): EditorState {
@@ -79,7 +88,7 @@ function blankDoc(type: ContentTypeId): EditorState {
     type,
     slug: defaultSlug,
     frontmatter: { type, draft: true },
-    body: "",
+    body: starterBody(type),
     originalPath: null,
   };
 }
@@ -145,7 +154,9 @@ function AdminPage() {
   const [draft, setDraft] = useState<EditorState>(blankDoc("profile"));
   const [deleteTarget, setDeleteTarget] = useState<ContentDoc | null>(null);
   const [actionMessage, setActionMessage] = useState<string>("");
-  const [publishResult, setPublishResult] = useState<PublishResult | null>(null);
+  const [publishResult, setPublishResult] = useState<PublishResult | null>(
+    null,
+  );
   const [history, setHistory] = useState<
     Array<{ sha: string; url: string; message: string; date: string }>
   >([]);
@@ -162,9 +173,13 @@ function AdminPage() {
       setActionMessage(items.ok ? "" : items.message);
       if (!draft.originalPath) {
         const first = items.ok
-          ? items.items.find((item) => item.type === selectedType)
+          ? (items.items.find((item) => item.type === selectedType) ??
+            items.items.find((item) => item.type !== "unknown"))
           : undefined;
-        if (first) setDraft(mapDoc(first));
+        if (first) {
+          setSelectedType(first.type);
+          setDraft(mapDoc(first));
+        }
       }
     } catch (error) {
       setActionMessage(
@@ -188,18 +203,22 @@ function AdminPage() {
   useEffect(() => {
     if (
       !publishResult ||
-      ["ready", "failed", "unavailable"].includes(publishResult.deployment.state)
+      ["ready", "failed", "unavailable"].includes(
+        publishResult.deployment.state,
+      )
     )
       return;
     const timer = window.setInterval(() => {
-      void deploymentStatus({ data: { sha: publishResult.sha } }).then((result) => {
-        if (result.ok && result.deployment)
-          setPublishResult((previous) =>
-            previous
-              ? { ...previous, deployment: result.deployment }
-              : previous,
-          );
-      });
+      void deploymentStatus({ data: { sha: publishResult.sha } }).then(
+        (result) => {
+          if (result.ok && result.deployment)
+            setPublishResult((previous) =>
+              previous
+                ? { ...previous, deployment: result.deployment }
+                : previous,
+            );
+        },
+      );
     }, 10_000);
     return () => window.clearInterval(timer);
   }, [publishResult]);
@@ -336,7 +355,9 @@ function AdminPage() {
         contentHistory({ data: { path: doc.path } }),
       ]);
       setPublishedUrl(published.ok ? published.publishedUrl : null);
-      setPublishedBody(published.ok ? published.published?.doc.body ?? null : null);
+      setPublishedBody(
+        published.ok ? (published.published?.doc.body ?? null) : null,
+      );
       setHistory(changes.ok ? changes.entries : []);
       setPublishResult(null);
     } catch (error) {
@@ -466,7 +487,12 @@ function AdminPage() {
                   type="button"
                   onClick={() => {
                     setSelectedType(type.id);
-                    if (!draft.originalPath) createNew(type.id);
+                    const first = content.find((item) => item.type === type.id);
+                    if (first) {
+                      void selectDoc(first);
+                    } else {
+                      createNew(type.id);
+                    }
                   }}
                   className={cn(
                     "rounded-full border px-3 py-1 text-xs transition-colors",
@@ -589,13 +615,40 @@ function AdminPage() {
                     : "GitHub publish committed"}
                 </p>
                 <p className="mt-1 text-sm">
-                  Commit <code>{publishResult.sha.slice(0, 7)}</code> · Deployment {publishResult.deployment.state}
+                  Commit <code>{publishResult.sha.slice(0, 7)}</code> ·
+                  Deployment {publishResult.deployment.state}
                 </p>
               </div>
               <div className="flex flex-wrap gap-3 text-sm">
-                <a className="text-accent link-underline" href={publishResult.commitUrl} target="_blank" rel="noreferrer">View GitHub commit</a>
-                {publishResult.deployment.state === "ready" && publishResult.publishedUrl ? <a className="text-accent link-underline" href={publishResult.publishedUrl} target="_blank" rel="noreferrer">Open published page</a> : null}
-                {publishResult.deployment.url ? <a className="text-accent link-underline" href={publishResult.deployment.url} target="_blank" rel="noreferrer">View deployment</a> : null}
+                <a
+                  className="text-accent link-underline"
+                  href={publishResult.commitUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  View GitHub commit
+                </a>
+                {publishResult.deployment.state === "ready" &&
+                publishResult.publishedUrl ? (
+                  <a
+                    className="text-accent link-underline"
+                    href={publishResult.publishedUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    Open published page
+                  </a>
+                ) : null}
+                {publishResult.deployment.url ? (
+                  <a
+                    className="text-accent link-underline"
+                    href={publishResult.deployment.url}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    View deployment
+                  </a>
+                ) : null}
               </div>
             </div>
           ) : null}
@@ -777,7 +830,8 @@ function AdminPage() {
 
               <div className="flex flex-wrap gap-3 pt-2">
                 <Button type="submit" disabled={saving}>
-                  <FilePenLine className="h-4 w-4" /> {saving ? "Saving…" : "Save draft"}
+                  <FilePenLine className="h-4 w-4" />{" "}
+                  {saving ? "Saving…" : "Save draft"}
                 </Button>
                 <Button
                   type="button"
@@ -810,20 +864,47 @@ function AdminPage() {
                 <p className="eyebrow">Change history</p>
                 <div className="mt-2 flex flex-wrap gap-3 text-sm">
                   {publishedUrl ? (
-                    <a className="text-accent link-underline" href={publishedUrl} target="_blank" rel="noreferrer">View published</a>
+                    <a
+                      className="text-accent link-underline"
+                      href={publishedUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      View published
+                    </a>
                   ) : (
-                    <span className="text-muted-foreground">No published URL detected.</span>
+                    <span className="text-muted-foreground">
+                      No published URL detected.
+                    </span>
                   )}
                   {history[0] ? (
-                    <a className="text-accent link-underline" href={history[0].url} target="_blank" rel="noreferrer">View changes on GitHub</a>
+                    <a
+                      className="text-accent link-underline"
+                      href={history[0].url}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      View changes on GitHub
+                    </a>
                   ) : null}
                 </div>
                 {history.length ? (
                   <ol className="mt-4 space-y-2 text-xs text-muted-foreground">
                     {history.slice(0, 5).map((entry) => (
                       <li key={entry.sha} className="flex flex-wrap gap-x-2">
-                        <time>{entry.date ? new Date(entry.date).toLocaleString() : "Unknown date"}</time>
-                        <a className="text-accent link-underline" href={entry.url} target="_blank" rel="noreferrer">{entry.sha.slice(0, 7)}</a>
+                        <time>
+                          {entry.date
+                            ? new Date(entry.date).toLocaleString()
+                            : "Unknown date"}
+                        </time>
+                        <a
+                          className="text-accent link-underline"
+                          href={entry.url}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          {entry.sha.slice(0, 7)}
+                        </a>
                         <span>{entry.message}</span>
                       </li>
                     ))}
